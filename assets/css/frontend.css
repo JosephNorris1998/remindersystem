@@ -1,0 +1,219 @@
+/* =========================================================
+   RMS – Frontend Form Styles
+   ========================================================= */
+
+.rms-form-wrapper {
+	max-width: 520px;
+	margin: 0 auto;
+	background: #eaf4fb;
+	border: 1px solid #c0d9f0;
+	border-radius: 10px;
+	padding: 28px 32px 32px;
+	font-family: 'Segoe UI', Arial, sans-serif;
+	box-sizing: border-box;
+}
+
+/* ---- Notice ---- */
+.rms-notice {
+	background: #fff;
+	border: 1px solid #b3d4f0;
+	border-radius: 6px;
+	padding: 13px 17px;
+	margin-bottom: 20px;
+	color: #1a5276;
+	font-size: 14px;
+	line-height: 1.65;
+}
+
+.rms-notice p {
+	margin: 0;
+}
+
+.rms-notice strong {
+	color: #154360;
+}
+
+/* ---- Checkbox row ---- */
+.rms-checkbox-row {
+	margin-bottom: 22px;
+	display: flex;
+	justify-content: center;
+}
+
+.rms-checkbox-label {
+	display: inline-flex;
+	align-items: flex-start;
+	gap: 10px;
+	cursor: pointer;
+	font-size: 13.5px;
+	color: #1a5276;
+	line-height: 1.55;
+	max-width: 460px;
+}
+
+.rms-checkbox-label input[type="checkbox"] {
+	width: 17px;
+	height: 17px;
+	margin-top: 1px;
+	flex-shrink: 0;
+	accent-color: #1a73e8;
+	cursor: pointer;
+}
+
+/* ---- Fields ---- */
+.rms-field {
+	margin-bottom: 16px;
+	opacity: 0.42;
+	pointer-events: none;
+	transition: opacity 0.25s ease;
+}
+
+.rms-field.rms-active {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+.rms-field label {
+	display: block;
+	font-size: 13.5px;
+	font-weight: 600;
+	color: #1a3a5c;
+	margin-bottom: 6px;
+}
+
+.rms-field input[type="text"],
+.rms-field input[type="email"],
+.rms-field select {
+	width: 100%;
+	padding: 10px 14px;
+	border: 1px solid #b8d4ea;
+	border-radius: 6px;
+	font-size: 15px;
+	color: #2c3e50;
+	background: #fff;
+	box-sizing: border-box;
+	transition: border-color 0.2s, box-shadow 0.2s;
+	-webkit-appearance: none;
+	appearance: none;
+}
+
+.rms-field select {
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='%23555' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 12px center;
+	background-size: 18px;
+	padding-right: 38px;
+}
+
+.rms-field input:focus,
+.rms-field select:focus {
+	outline: none;
+	border-color: #1a73e8;
+	box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.13);
+}
+
+.rms-field input:disabled,
+.rms-field select:disabled {
+	background: #f0f4f8;
+	cursor: not-allowed;
+	color: #999;
+}
+
+/* ---- Submit row ---- */
+.rms-submit-row {
+	margin-top: 24px;
+	opacity: 0.42;
+	pointer-events: none;
+	transition: opacity 0.25s ease;
+}
+
+.rms-submit-row.rms-active {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+#rms-submit-btn {
+	background: #1a73e8;
+	color: #fff;
+	border: none;
+	padding: 12px 30px;
+	border-radius: 6px;
+	font-size: 15.5px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+	letter-spacing: 0.2px;
+}
+
+#rms-submit-btn:hover:not(:disabled) {
+	background: #1558c4;
+	transform: translateY(-1px);
+	box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+}
+
+#rms-submit-btn:active:not(:disabled) {
+	transform: translateY(0);
+}
+
+#rms-submit-btn:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+/* ---- Messages ---- */
+#rms-form-message {
+	margin-top: 18px;
+	padding: 14px 18px;
+	border-radius: 7px;
+	font-size: 14.5px;
+	line-height: 1.6;
+	animation: rmsSlideIn 0.25s ease;
+}
+
+@keyframes rmsSlideIn {
+	from { opacity: 0; transform: translateY(-6px); }
+	to   { opacity: 1; transform: translateY(0); }
+}
+
+.rms-success {
+	background: #e8f5e9;
+	border: 1px solid #a5d6a7;
+	color: #2e7d32;
+}
+
+.rms-error {
+	background: #fce4ec;
+	border: 1px solid #f48fb1;
+	color: #c62828;
+}
+
+/* ---- Flatpickr overrides ---- */
+.flatpickr-calendar {
+	border-radius: 10px !important;
+	box-shadow: 0 6px 24px rgba(0, 0, 0, 0.13) !important;
+	font-family: 'Segoe UI', Arial, sans-serif !important;
+}
+
+.flatpickr-day.selected,
+.flatpickr-day.selected:hover,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange {
+	background: #1a73e8 !important;
+	border-color: #1a73e8 !important;
+}
+
+.flatpickr-day:hover {
+	background: #e8f0fe !important;
+}
+
+/* ---- Elementor compatibility ---- */
+.elementor-widget-shortcode .rms-form-wrapper {
+	width: 100%;
+}
+
+/* Responsive */
+@media (max-width: 560px) {
+	.rms-form-wrapper {
+		padding: 20px 18px 24px;
+	}
+}
