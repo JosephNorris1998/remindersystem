@@ -120,6 +120,16 @@ class RMS_DB {
 	}
 
 	/**
+	 * Return current datetime in America/Panama timezone as a MySQL-formatted string.
+	 * Using an explicit timezone makes reminder calculations timezone-independent from
+	 * whatever the WP site timezone option is set to.
+	 */
+	private static function get_panama_now() {
+		$tz = defined( 'RMS_TIMEZONE' ) ? RMS_TIMEZONE : 'America/Panama';
+		return ( new DateTime( 'now', new DateTimeZone( $tz ) ) )->format( 'Y-m-d H:i:s' );
+	}
+
+	/**
 	 * Return appointments whose reminder window has arrived and reminder has not been sent.
 	 * Uses SECOND precision so fractional hours (e.g. 0.016667 ≈ 1 minute) work correctly.
 	 */
@@ -128,7 +138,7 @@ class RMS_DB {
 		$table   = self::get_table_name();
 		$hours   = (float) get_option( 'rms_reminder_hours', 24 );
 		$seconds = max( 1, (int) round( $hours * 3600 ) );
-		$now     = current_time( 'mysql' );
+		$now     = self::get_panama_now();
 
 		return $wpdb->get_results(
 			$wpdb->prepare(
@@ -146,7 +156,7 @@ class RMS_DB {
 			$id,
 			array(
 				'reminder_sent'    => 1,
-				'reminder_sent_at' => current_time( 'mysql' ),
+				'reminder_sent_at' => self::get_panama_now(),
 			)
 		);
 	}

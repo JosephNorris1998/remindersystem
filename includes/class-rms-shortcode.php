@@ -145,16 +145,17 @@ class RMS_Shortcode {
 		}
 
 		/* Parse date from flatpickr: d/m/Y H:i */
-		$parsed = DateTime::createFromFormat( 'd/m/Y H:i', $date );
+		$tz = new DateTimeZone( defined( 'RMS_TIMEZONE' ) ? RMS_TIMEZONE : 'America/Panama' );
+		$parsed = DateTime::createFromFormat( 'd/m/Y H:i', $date, $tz );
 		if ( ! $parsed ) {
-			$parsed = DateTime::createFromFormat( 'Y-m-d H:i', $date );
+			$parsed = DateTime::createFromFormat( 'Y-m-d H:i', $date, $tz );
 		}
 		if ( ! $parsed ) {
 			wp_send_json_error( array( 'message' => 'Formato de fecha inválido. Seleccione la fecha del calendario.' ) );
 		}
 
 		/* Validate it is in the future */
-		$now = new DateTime( current_time( 'mysql' ) );
+		$now = new DateTime( 'now', $tz );
 		if ( $parsed <= $now ) {
 			wp_send_json_error( array( 'message' => 'La fecha de la cita debe ser en el futuro.' ) );
 		}
@@ -166,7 +167,7 @@ class RMS_Shortcode {
 			'procedure_name'   => $proc,
 			'status'           => 'confirmed',
 			'reminder_sent'    => 0,
-			'created_at'       => current_time( 'mysql' ),
+			'created_at'       => ( new DateTime( 'now', $tz ) )->format( 'Y-m-d H:i:s' ),
 		) );
 
 		if ( ! $id ) {
