@@ -132,23 +132,32 @@ class RMS_DB {
 	}
 
 	/**
-	 * Return appointments whose reminder window has arrived and reminder has not been sent.
-	 * Uses SECOND precision so fractional hours (e.g. 0.016667 ≈ 1 minute) work correctly.
+	 * Return appointments whose configurable reminder window (default 24 h) is active.
+	 *
+	 * Selects only citas whose appointment_date falls in the half-open interval:
+	 *   [now + target_seconds, now + target_seconds + window_seconds)
+	 *
+	 * This guarantees the reminder fires "approximately target hours before" rather
+	 * than "any time within the next target hours".  With a cron every minute and a
+	 * 10-minute window there will always be at least one run that catches the slot,
+	 * while the sent-flag prevents duplicates.
 	 */
 	public static function get_pending_reminders() {
 		global $wpdb;
-		$table   = self::get_table_name();
-		$hours   = (float) get_option( 'rms_reminder_hours', 24 );
-		$seconds = max( 1, (int) round( $hours * 3600 ) );
-		$now     = self::get_panama_now();
+		$table          = self::get_table_name();
+		$hours          = (float) get_option( 'rms_reminder_hours', 24 );
+		$target_seconds = max( 1, (int) round( $hours * 3600 ) );
+		$window_seconds = 600; // 10-minute tolerance window
+		$now            = self::get_panama_now();
 
 		return $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT * FROM {$table}
 				 WHERE reminder_sent = 0
-				   AND appointment_date > %s
-				   AND DATE_SUB(appointment_date, INTERVAL %d SECOND) <= %s",
-				$now, $seconds, $now
+				   AND appointment_date >= DATE_ADD(%s, INTERVAL %d SECOND)
+				   AND appointment_date <  DATE_ADD(%s, INTERVAL %d SECOND)",
+				$now, $target_seconds,
+				$now, $target_seconds + $window_seconds
 			)
 		);
 	}
@@ -165,17 +174,19 @@ class RMS_DB {
 
 	public static function get_pending_48h_reminders() {
 		global $wpdb;
-		$table   = self::get_table_name();
-		$seconds = 48 * 3600; // Fixed 48-hour window
-		$now     = self::get_panama_now();
+		$table          = self::get_table_name();
+		$target_seconds = 48 * 3600; // Fixed 48-hour target
+		$window_seconds = 600;       // 10-minute tolerance window
+		$now            = self::get_panama_now();
 
 		return $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT * FROM {$table}
 				 WHERE reminder_48h_sent = 0
-				   AND appointment_date > %s
-				   AND DATE_SUB(appointment_date, INTERVAL %d SECOND) <= %s",
-				$now, $seconds, $now
+				   AND appointment_date >= DATE_ADD(%s, INTERVAL %d SECOND)
+				   AND appointment_date <  DATE_ADD(%s, INTERVAL %d SECOND)",
+				$now, $target_seconds,
+				$now, $target_seconds + $window_seconds
 			)
 		);
 	}
