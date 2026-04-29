@@ -31,10 +31,29 @@ class RMS_Cron {
 
 	public function process_reminders() {
 		// Process the configurable-window reminder (default 24 h).
+		$reminder_hours = (float) get_option( 'rms_reminder_hours', 24 );
+		$window_minutes = 10;
+
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			$tz  = defined( 'RMS_TIMEZONE' ) ? RMS_TIMEZONE : 'America/Panama';
+			$now = ( new DateTime( 'now', new DateTimeZone( $tz ) ) )->format( 'Y-m-d H:i:s' );
+			error_log( sprintf(
+				'[RMS] process_reminders() iniciado. now (Panamá)=%s | objetivo_24h=%.4fh | objetivo_48h=48h | ventana=%dmin',
+				$now,
+				$reminder_hours,
+				$window_minutes
+			) );
+		}
+
 		$appointments = RMS_DB::get_pending_reminders();
 
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			error_log( sprintf( '[RMS] process_reminders() ejecutado. Citas pendientes encontradas: %d', count( $appointments ) ) );
+			error_log( sprintf(
+				'[RMS] Recordatorios %sh pendientes encontrados: %d (ventana: %d min)',
+				$reminder_hours,
+				count( $appointments ),
+				$window_minutes
+			) );
 		}
 
 		foreach ( $appointments as $appointment ) {
@@ -53,7 +72,11 @@ class RMS_Cron {
 		$appointments_48h = RMS_DB::get_pending_48h_reminders();
 
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			error_log( sprintf( '[RMS] Recordatorios 48h pendientes: %d', count( $appointments_48h ) ) );
+			error_log( sprintf(
+				'[RMS] Recordatorios 48h pendientes encontrados: %d (ventana: %d min)',
+				count( $appointments_48h ),
+				$window_minutes
+			) );
 		}
 
 		foreach ( $appointments_48h as $appointment ) {
