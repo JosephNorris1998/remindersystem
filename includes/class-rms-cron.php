@@ -30,6 +30,7 @@ class RMS_Cron {
 	}
 
 	public function process_reminders() {
+		// Process the configurable-window reminder (default 24 h).
 		$appointments = RMS_DB::get_pending_reminders();
 
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
@@ -45,6 +46,25 @@ class RMS_Cron {
 				}
 			} elseif ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 				error_log( sprintf( '[RMS] Fallo al enviar recordatorio: cita ID %d (%s).', $appointment->id, $appointment->patient_email ) );
+			}
+		}
+
+		// Process the fixed 48-hour reminder.
+		$appointments_48h = RMS_DB::get_pending_48h_reminders();
+
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( sprintf( '[RMS] Recordatorios 48h pendientes: %d', count( $appointments_48h ) ) );
+		}
+
+		foreach ( $appointments_48h as $appointment ) {
+			$sent = RMS_Email::send_reminder_48h( $appointment );
+			if ( $sent ) {
+				RMS_DB::mark_reminder_48h_sent( $appointment->id );
+				if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+					error_log( sprintf( '[RMS] Recordatorio 48h enviado: cita ID %d (%s).', $appointment->id, $appointment->patient_email ) );
+				}
+			} elseif ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				error_log( sprintf( '[RMS] Fallo al enviar recordatorio 48h: cita ID %d (%s).', $appointment->id, $appointment->patient_email ) );
 			}
 		}
 	}

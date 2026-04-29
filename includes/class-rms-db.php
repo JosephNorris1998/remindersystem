@@ -15,15 +15,17 @@ class RMS_DB {
 		$charset_collate = $wpdb->get_charset_collate();
 
 		$sql = "CREATE TABLE IF NOT EXISTS {$table} (
-			id               bigint(20)   NOT NULL AUTO_INCREMENT,
-			patient_name     varchar(255) NOT NULL,
-			patient_email    varchar(255) NOT NULL,
-			appointment_date datetime     NOT NULL,
-			procedure_name   varchar(255) NOT NULL,
-			status           varchar(50)  NOT NULL DEFAULT 'confirmed',
-			reminder_sent    tinyint(1)   NOT NULL DEFAULT 0,
-			reminder_sent_at datetime              DEFAULT NULL,
-			created_at       datetime     NOT NULL,
+			id                   bigint(20)   NOT NULL AUTO_INCREMENT,
+			patient_name         varchar(255) NOT NULL,
+			patient_email        varchar(255) NOT NULL,
+			appointment_date     datetime     NOT NULL,
+			procedure_name       varchar(255) NOT NULL,
+			status               varchar(50)  NOT NULL DEFAULT 'confirmed',
+			reminder_sent        tinyint(1)   NOT NULL DEFAULT 0,
+			reminder_sent_at     datetime              DEFAULT NULL,
+			reminder_48h_sent    tinyint(1)   NOT NULL DEFAULT 0,
+			reminder_48h_sent_at datetime              DEFAULT NULL,
+			created_at           datetime     NOT NULL,
 			PRIMARY KEY (id)
 		) {$charset_collate};";
 
@@ -159,5 +161,44 @@ class RMS_DB {
 				'reminder_sent_at' => self::get_panama_now(),
 			)
 		);
+	}
+
+	public static function get_pending_48h_reminders() {
+		global $wpdb;
+		$table   = self::get_table_name();
+		$seconds = 48 * 3600; // Fixed 48-hour window
+		$now     = self::get_panama_now();
+
+		return $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT * FROM {$table}
+				 WHERE reminder_48h_sent = 0
+				   AND appointment_date > %s
+				   AND DATE_SUB(appointment_date, INTERVAL %d SECOND) <= %s",
+				$now, $seconds, $now
+			)
+		);
+	}
+
+	public static function mark_reminder_48h_sent( $id ) {
+		return self::update(
+			$id,
+			array(
+				'reminder_48h_sent'    => 1,
+				'reminder_48h_sent_at' => self::get_panama_now(),
+			)
+		);
+	}
+
+	/**
+	 * Run schema upgrades when the DB version doesn't match the plugin version.
+	 * Safe to call on every page load — uses an option flag to avoid redundant work.
+	 */
+	public static function maybe_upgrade() {
+		if ( get_option( 'rms_db_version' ) === RMS_VERSION ) {
+			return;
+		}
+		self::install();
+		update_option( 'rms_db_version', RMS_VERSION );
 	}
 }

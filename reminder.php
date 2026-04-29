@@ -12,7 +12,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'RMS_VERSION',    '1.0.0' );
+define( 'RMS_VERSION',    '1.1.0' );
 define( 'RMS_PLUGIN_FILE', __FILE__ );
 define( 'RMS_PLUGIN_DIR',  plugin_dir_path( __FILE__ ) );
 define( 'RMS_PLUGIN_URL',  plugin_dir_url( __FILE__ ) );
@@ -46,6 +46,7 @@ function rms_deactivate() {
 add_action( 'plugins_loaded', 'rms_init' );
 
 function rms_init() {
+	RMS_DB::maybe_upgrade();
 	new RMS_Admin();
 	new RMS_Shortcode();
 	new RMS_Cron();
