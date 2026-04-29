@@ -59,6 +59,17 @@ class RMS_Email {
 		);
 	}
 
+	public static function send_reminder_48h( $appointment ) {
+		$subject = '⏰ Recordatorio (48 horas): Su procedimiento médico – '
+			. date_i18n( 'd/m/Y H:i', strtotime( $appointment->appointment_date ) );
+
+		return self::send(
+			$appointment->patient_email,
+			$subject,
+			self::reminder_48h_template( $appointment )
+		);
+	}
+
 	/* ------------------------------------------------------------------ */
 	/* Email templates                                                      */
 	/* ------------------------------------------------------------------ */
@@ -150,11 +161,11 @@ class RMS_Email {
 		. $card .
 		'<div style="background:#e8f5e9;border-left:4px solid #4caf50;border-radius:4px;padding:14px 18px;margin-bottom:24px;">
 			<p style="margin:0;color:#2e7d32;font-size:13px;line-height:1.7;">
-				<strong>💡 Recuerde:</strong> Por favor llegue <strong>15 minutos antes</strong> de su cita para completar los trámites de admisión.
+				<strong>💡 Día del procedimiento:</strong> Debe estar a las <strong>06:00 a.m.</strong> en el hospital <strong>Punta Pacífica</strong> en el <strong>quinto piso</strong>, departamento de <strong>admisión</strong> (en ayunas).
 			</p>
 		</div>
 		<p style="color:#555;font-size:14px;line-height:1.8;margin:0;">
-			Recibirá un <strong>recordatorio</strong> antes de su cita. Si necesita cancelar o reprogramar, comuníquese con nosotros lo antes posible.
+			Si necesita cancelar o reprogramar debe comunicarse con la secretaria o asistente del Doctor.
 		</p>';
 
 		return self::base_layout(
@@ -185,17 +196,49 @@ class RMS_Email {
 		. $card .
 		'<div style="background:#fff3cd;border-left:4px solid #ffc107;border-radius:4px;padding:14px 18px;margin-bottom:24px;">
 			<p style="margin:0;color:#856404;font-size:13px;line-height:1.7;">
-				<strong>⚠️ Importante:</strong> Llegue <strong>15 minutos antes</strong> de su cita. Si no puede asistir, comuníquese con nosotros con anticipación para reagendar.
+				<strong>⚠️ Día del procedimiento:</strong> Debe estar a las <strong>06:00 a.m.</strong> en el hospital <strong>Punta Pacífica</strong> en el <strong>quinto piso</strong>, departamento de <strong>admisión</strong> (en ayunas).
 			</p>
 		</div>
-		<p style="color:#555;font-size:14px;line-height:1.8;margin:0;">
+		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 12px;">
 			¡Le deseamos mucho éxito en su procedimiento! 🌟
+		</p>
+		<p style="color:#555;font-size:14px;line-height:1.8;margin:0;">
+			Si necesita cancelar o reprogramar debe comunicarse con la secretaria o asistente del Doctor.
 		</p>';
 
 		return self::base_layout(
 			'linear-gradient(135deg,#ff6b35 0%,#e53935 100%)',
 			'⏰ Recordatorio de Cita',
 			'Su cita es ' . $time_label,
+			$body
+		);
+	}
+
+	private static function reminder_48h_template( $appointment ) {
+		$name = esc_html( $appointment->patient_name );
+		$card = self::details_card( $appointment, '#fff8f0', '#ffe0cc', '#ffe8d6' );
+
+		$body = '<p style="font-size:17px;color:#333;margin:0 0 20px;">Hola, <strong>' . $name . '</strong> 👋</p>
+		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 26px;">
+			Le recordamos que tiene una <strong>cita médica programada en 48 horas</strong>. Por favor asegúrese de estar preparado con anticipación.
+		</p>'
+		. $card .
+		'<div style="background:#fff3cd;border-left:4px solid #ffc107;border-radius:4px;padding:14px 18px;margin-bottom:24px;">
+			<p style="margin:0;color:#856404;font-size:13px;line-height:1.7;">
+				<strong>⚠️ Día del procedimiento:</strong> Debe estar a las <strong>06:00 a.m.</strong> en el hospital <strong>Punta Pacífica</strong> en el <strong>quinto piso</strong>, departamento de <strong>admisión</strong> (en ayunas).
+			</p>
+		</div>
+		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 12px;">
+			¡Le deseamos mucho éxito en su procedimiento! 🌟
+		</p>
+		<p style="color:#555;font-size:14px;line-height:1.8;margin:0;">
+			Si necesita cancelar o reprogramar debe comunicarse con la secretaria o asistente del Doctor.
+		</p>';
+
+		return self::base_layout(
+			'linear-gradient(135deg,#ff6b35 0%,#e53935 100%)',
+			'⏰ Recordatorio de Cita (48 horas)',
+			'Su cita es en 48 horas',
 			$body
 		);
 	}
