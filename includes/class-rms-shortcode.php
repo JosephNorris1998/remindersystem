@@ -161,13 +161,14 @@ class RMS_Shortcode {
 		}
 
 		$id = RMS_DB::insert( array(
-			'patient_name'     => $name,
-			'patient_email'    => $email,
-			'appointment_date' => $parsed->format( 'Y-m-d H:i:s' ),
-			'procedure_name'   => $proc,
-			'status'           => 'confirmed',
-			'reminder_sent'    => 0,
-			'created_at'       => ( new DateTime( 'now', $tz ) )->format( 'Y-m-d H:i:s' ),
+			'patient_name'      => $name,
+			'patient_email'     => $email,
+			'appointment_date'  => $parsed->format( 'Y-m-d H:i:s' ),
+			'procedure_name'    => $proc,
+			'status'            => 'confirmed',
+			'reminder_sent'     => 0,
+			'reminder_48h_sent' => 0,
+			'created_at'        => ( new DateTime( 'now', $tz ) )->format( 'Y-m-d H:i:s' ),
 		) );
 
 		if ( ! $id ) {

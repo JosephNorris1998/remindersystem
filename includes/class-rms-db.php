@@ -132,32 +132,32 @@ class RMS_DB {
 	}
 
 	/**
-	 * Return appointments whose configurable reminder window (default 24 h) is active.
+	 * Return appointments whose configurable reminder (default 24 h) is due.
 	 *
-	 * Selects only citas whose appointment_date falls in the half-open interval:
-	 *   [now + target_seconds, now + target_seconds + window_seconds)
+	 * Logic: the reminder moment has already arrived (i.e. we are past the
+	 * "target_hours before appointment" threshold) but the appointment is still
+	 * in the future.  The reminder_sent flag prevents duplicate sends.
 	 *
-	 * This guarantees the reminder fires "approximately target hours before" rather
-	 * than "any time within the next target hours".  With a cron every minute and a
-	 * 10-minute window there will always be at least one run that catches the slot,
-	 * while the sent-flag prevents duplicates.
+	 * This approach is resilient to WP-Cron imprecision and to external ping
+	 * services (e.g. UptimeRobot Free, every 5 min): even if the cron fires
+	 * late, the next run will still find the record and send it.
 	 */
 	public static function get_pending_reminders() {
 		global $wpdb;
 		$table          = self::get_table_name();
 		$hours          = (float) get_option( 'rms_reminder_hours', 24 );
 		$target_seconds = max( 1, (int) round( $hours * 3600 ) );
-		$window_seconds = 600; // 10-minute tolerance window
 		$now            = self::get_panama_now();
 
 		return $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT * FROM {$table}
 				 WHERE reminder_sent = 0
-				   AND appointment_date >= DATE_ADD(%s, INTERVAL %d SECOND)
-				   AND appointment_date <  DATE_ADD(%s, INTERVAL %d SECOND)",
-				$now, $target_seconds,
-				$now, $target_seconds + $window_seconds
+				   AND DATE_SUB(appointment_date, INTERVAL %d SECOND) <= %s
+				   AND appointment_date > %s",
+				$target_seconds,
+				$now,
+				$now
 			)
 		);
 	}
@@ -176,17 +176,17 @@ class RMS_DB {
 		global $wpdb;
 		$table          = self::get_table_name();
 		$target_seconds = 48 * 3600; // Fixed 48-hour target
-		$window_seconds = 600;       // 10-minute tolerance window
 		$now            = self::get_panama_now();
 
 		return $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT * FROM {$table}
 				 WHERE reminder_48h_sent = 0
-				   AND appointment_date >= DATE_ADD(%s, INTERVAL %d SECOND)
-				   AND appointment_date <  DATE_ADD(%s, INTERVAL %d SECOND)",
-				$now, $target_seconds,
-				$now, $target_seconds + $window_seconds
+				   AND DATE_SUB(appointment_date, INTERVAL %d SECOND) <= %s
+				   AND appointment_date > %s",
+				$target_seconds,
+				$now,
+				$now
 			)
 		);
 	}
@@ -204,12 +204,28 @@ class RMS_DB {
 	/**
 	 * Run schema upgrades when the DB version doesn't match the plugin version.
 	 * Safe to call on every page load — uses an option flag to avoid redundant work.
+	 *
+	 * Also performs a one-time, idempotent ALTER TABLE to add the 48h reminder
+	 * columns in case the site was installed before those columns existed.
 	 */
 	public static function maybe_upgrade() {
-		if ( get_option( 'rms_db_version' ) === RMS_VERSION ) {
-			return;
+		global $wpdb;
+
+		if ( get_option( 'rms_db_version' ) !== RMS_VERSION ) {
+			self::install();
+			update_option( 'rms_db_version', RMS_VERSION );
 		}
-		self::install();
-		update_option( 'rms_db_version', RMS_VERSION );
+
+		// Idempotent safety-net: add 48h columns if they are missing on existing installs.
+		$table   = self::get_table_name();
+		$columns = $wpdb->get_col( "SHOW COLUMNS FROM `" . esc_sql( $table ) . "`", 0 );
+
+		if ( ! empty( $columns ) && ! in_array( 'reminder_48h_sent', $columns, true ) ) {
+			$wpdb->query( "ALTER TABLE `" . esc_sql( $table ) . "` ADD COLUMN reminder_48h_sent tinyint(1) NOT NULL DEFAULT 0" );
+		}
+
+		if ( ! empty( $columns ) && ! in_array( 'reminder_48h_sent_at', $columns, true ) ) {
+			$wpdb->query( "ALTER TABLE `" . esc_sql( $table ) . "` ADD COLUMN reminder_48h_sent_at datetime DEFAULT NULL" );
+		}
 	}
 }
