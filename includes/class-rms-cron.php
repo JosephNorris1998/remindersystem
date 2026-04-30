@@ -32,16 +32,14 @@ class RMS_Cron {
 	public function process_reminders() {
 		// Process the configurable-window reminder (default 24 h).
 		$reminder_hours = (float) get_option( 'rms_reminder_hours', 24 );
-		$window_minutes = 10;
 
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 			$tz  = defined( 'RMS_TIMEZONE' ) ? RMS_TIMEZONE : 'America/Panama';
 			$now = ( new DateTime( 'now', new DateTimeZone( $tz ) ) )->format( 'Y-m-d H:i:s' );
 			error_log( sprintf(
-				'[RMS] process_reminders() iniciado. now (Panamá)=%s | objetivo_24h=%.4fh | objetivo_48h=48h | ventana=%dmin',
+				'[RMS] process_reminders() iniciado. now (Panamá)=%s | objetivo=%.4fh | objetivo_48h=48h',
 				$now,
-				$reminder_hours,
-				$window_minutes
+				$reminder_hours
 			) );
 		}
 
@@ -49,10 +47,9 @@ class RMS_Cron {
 
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 			error_log( sprintf(
-				'[RMS] Recordatorios %sh pendientes encontrados: %d (ventana: %d min)',
+				'[RMS] Recordatorios %sh pendientes encontrados: %d',
 				$reminder_hours,
-				count( $appointments ),
-				$window_minutes
+				count( $appointments )
 			) );
 		}
 
@@ -73,9 +70,8 @@ class RMS_Cron {
 
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 			error_log( sprintf(
-				'[RMS] Recordatorios 48h pendientes encontrados: %d (ventana: %d min)',
-				count( $appointments_48h ),
-				$window_minutes
+				'[RMS] Recordatorios 48h pendientes encontrados: %d',
+				count( $appointments_48h )
 			) );
 		}
 
