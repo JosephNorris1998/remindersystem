@@ -37,9 +37,15 @@ class RMS_Email {
 		return $sent;
 	}
 
+	/** Returns a Unix timestamp for the stored Panama-local datetime string. */
+	private static function appt_timestamp( $appointment ) {
+		$dt = new DateTime( $appointment->appointment_date, new DateTimeZone( RMS_TIMEZONE ) );
+		return $dt->getTimestamp();
+	}
+
 	public static function send_confirmation( $appointment ) {
 		$subject = '✅ Confirmación de su cita médica – '
-			. date_i18n( 'd/m/Y H:i', strtotime( $appointment->appointment_date ) );
+			. wp_date( 'd/m/Y H:i', self::appt_timestamp( $appointment ), new DateTimeZone( RMS_TIMEZONE ) );
 
 		return self::send(
 			$appointment->patient_email,
@@ -50,7 +56,7 @@ class RMS_Email {
 
 	public static function send_reminder( $appointment ) {
 		$subject = '⏰ Recordatorio: Su cita médica – '
-			. date_i18n( 'd/m/Y H:i', strtotime( $appointment->appointment_date ) );
+			. wp_date( 'd/m/Y H:i', self::appt_timestamp( $appointment ), new DateTimeZone( RMS_TIMEZONE ) );
 
 		return self::send(
 			$appointment->patient_email,
@@ -61,7 +67,7 @@ class RMS_Email {
 
 	public static function send_reminder_48h( $appointment ) {
 		$subject = '⏰ Recordatorio (48 horas): Su procedimiento médico – '
-			. date_i18n( 'd/m/Y H:i', strtotime( $appointment->appointment_date ) );
+			. wp_date( 'd/m/Y H:i', self::appt_timestamp( $appointment ), new DateTimeZone( RMS_TIMEZONE ) );
 
 		return self::send(
 			$appointment->patient_email,
@@ -122,8 +128,10 @@ class RMS_Email {
 	private static function details_card( $appointment, $accent_bg, $accent_border, $row_border ) {
 		$name = esc_html( $appointment->patient_name );
 		$proc = esc_html( $appointment->procedure_name );
-		$date = date_i18n( 'l, d \d\e F \d\e Y', strtotime( $appointment->appointment_date ) );
-		$time = date_i18n( 'H:i', strtotime( $appointment->appointment_date ) );
+		$ts   = self::appt_timestamp( $appointment );
+		$tz   = new DateTimeZone( RMS_TIMEZONE );
+		$date = wp_date( 'l, d \d\e F \d\e Y', $ts, $tz );
+		$time = wp_date( 'H:i', $ts, $tz );
 
 		return '<table width="100%" cellpadding="0" cellspacing="0"
 				style="background:' . $accent_bg . ';border:1px solid ' . $accent_border . ';border-radius:10px;margin-bottom:28px;">
@@ -199,6 +207,10 @@ class RMS_Email {
 				<strong>⚠️ Día del procedimiento:</strong> Debe estar a las <strong>06:00 a.m.</strong> en el hospital <strong>Punta Pacífica</strong> en el <strong>quinto piso</strong>, departamento de <strong>admisión</strong> (en ayunas).
 			</p>
 		</div>
+		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 16px;">
+			Visita las indicaciones de preparación en tu guía:
+			<a href="https://pacificasalud.beforeaftermycare.com/guia-de-colonoscopia/" style="color:#1a73e8;text-decoration:underline;" target="_blank" rel="noopener noreferrer">Guía de Colonoscopia</a>
+		</p>
 		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 12px;">
 			¡Le deseamos mucho éxito en su procedimiento! 🌟
 		</p>
@@ -228,6 +240,10 @@ class RMS_Email {
 				<strong>⚠️ Día del procedimiento:</strong> Debe estar a las <strong>06:00 a.m.</strong> en el hospital <strong>Punta Pacífica</strong> en el <strong>quinto piso</strong>, departamento de <strong>admisión</strong> (en ayunas).
 			</p>
 		</div>
+		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 16px;">
+			Visita las indicaciones de preparación en tu guía:
+			<a href="https://pacificasalud.beforeaftermycare.com/guia-de-colonoscopia/" style="color:#1a73e8;text-decoration:underline;" target="_blank" rel="noopener noreferrer">Guía de Colonoscopia</a>
+		</p>
 		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 12px;">
 			¡Le deseamos mucho éxito en su procedimiento! 🌟
 		</p>
