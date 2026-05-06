@@ -160,14 +160,26 @@ class RMS_Shortcode {
 			wp_send_json_error( array( 'message' => 'La fecha de la cita debe ser en el futuro.' ) );
 		}
 
+		/*
+		 * Pre-mark reminders as sent if the appointment is already within their
+		 * time window at the moment of registration.  This prevents a reminder
+		 * from firing for a window that was never "in the future" for this patient.
+		 */
+		$seconds_until      = $parsed->getTimestamp() - $now->getTimestamp();
+		$reminder_hours     = (float) get_option( 'rms_reminder_hours', 24 );
+		$reminder_sent      = ( $seconds_until <= $reminder_hours * 3600 ) ? 1 : 0;
+		$reminder_48h_sent  = ( $seconds_until <= 48 * 3600 ) ? 1 : 0;
+		$reminder_2h_sent   = ( $seconds_until <= 2 * 3600 ) ? 1 : 0;
+
 		$id = RMS_DB::insert( array(
 			'patient_name'      => $name,
 			'patient_email'     => $email,
 			'appointment_date'  => $parsed->format( 'Y-m-d H:i:s' ),
 			'procedure_name'    => $proc,
 			'status'            => 'confirmed',
-			'reminder_sent'     => 0,
-			'reminder_48h_sent' => 0,
+			'reminder_sent'     => $reminder_sent,
+			'reminder_48h_sent' => $reminder_48h_sent,
+			'reminder_2h_sent'  => $reminder_2h_sent,
 			'created_at'        => ( new DateTime( 'now', $tz ) )->format( 'Y-m-d H:i:s' ),
 		) );
 
