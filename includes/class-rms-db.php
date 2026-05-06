@@ -25,6 +25,8 @@ class RMS_DB {
 			reminder_sent_at     datetime              DEFAULT NULL,
 			reminder_48h_sent    tinyint(1)   NOT NULL DEFAULT 0,
 			reminder_48h_sent_at datetime              DEFAULT NULL,
+			reminder_2h_sent     tinyint(1)   NOT NULL DEFAULT 0,
+			reminder_2h_sent_at  datetime              DEFAULT NULL,
 			created_at           datetime     NOT NULL,
 			PRIMARY KEY (id)
 		) {$charset_collate};";
@@ -201,6 +203,35 @@ class RMS_DB {
 		);
 	}
 
+	public static function get_pending_2h_reminders() {
+		global $wpdb;
+		$table          = self::get_table_name();
+		$target_seconds = 2 * 3600; // Fixed 2-hour target
+		$now            = self::get_panama_now();
+
+		return $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT * FROM {$table}
+				 WHERE reminder_2h_sent = 0
+				   AND DATE_SUB(appointment_date, INTERVAL %d SECOND) <= %s
+				   AND appointment_date > %s",
+				$target_seconds,
+				$now,
+				$now
+			)
+		);
+	}
+
+	public static function mark_reminder_2h_sent( $id ) {
+		return self::update(
+			$id,
+			array(
+				'reminder_2h_sent'    => 1,
+				'reminder_2h_sent_at' => self::get_panama_now(),
+			)
+		);
+	}
+
 	/**
 	 * Run schema upgrades when the DB version doesn't match the plugin version.
 	 * Safe to call on every page load — uses an option flag to avoid redundant work.
@@ -226,6 +257,14 @@ class RMS_DB {
 
 		if ( ! empty( $columns ) && ! in_array( 'reminder_48h_sent_at', $columns, true ) ) {
 			$wpdb->query( "ALTER TABLE `" . esc_sql( $table ) . "` ADD COLUMN reminder_48h_sent_at datetime DEFAULT NULL" );
+		}
+
+		if ( ! empty( $columns ) && ! in_array( 'reminder_2h_sent', $columns, true ) ) {
+			$wpdb->query( "ALTER TABLE `" . esc_sql( $table ) . "` ADD COLUMN reminder_2h_sent tinyint(1) NOT NULL DEFAULT 0" );
+		}
+
+		if ( ! empty( $columns ) && ! in_array( 'reminder_2h_sent_at', $columns, true ) ) {
+			$wpdb->query( "ALTER TABLE `" . esc_sql( $table ) . "` ADD COLUMN reminder_2h_sent_at datetime DEFAULT NULL" );
 		}
 	}
 }

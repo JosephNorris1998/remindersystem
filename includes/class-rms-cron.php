@@ -86,5 +86,27 @@ class RMS_Cron {
 				error_log( sprintf( '[RMS] Fallo al enviar recordatorio 48h: cita ID %d (%s).', $appointment->id, $appointment->patient_email ) );
 			}
 		}
+
+		// Process the fixed 2-hour reminder.
+		$appointments_2h = RMS_DB::get_pending_2h_reminders();
+
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( sprintf(
+				'[RMS] Recordatorios 2h pendientes encontrados: %d',
+				count( $appointments_2h )
+			) );
+		}
+
+		foreach ( $appointments_2h as $appointment ) {
+			$sent = RMS_Email::send_reminder_2h( $appointment );
+			if ( $sent ) {
+				RMS_DB::mark_reminder_2h_sent( $appointment->id );
+				if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+					error_log( sprintf( '[RMS] Recordatorio 2h enviado: cita ID %d (%s).', $appointment->id, $appointment->patient_email ) );
+				}
+			} elseif ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				error_log( sprintf( '[RMS] Fallo al enviar recordatorio 2h: cita ID %d (%s).', $appointment->id, $appointment->patient_email ) );
+			}
+		}
 	}
 }

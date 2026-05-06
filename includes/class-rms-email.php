@@ -76,6 +76,17 @@ class RMS_Email {
 		);
 	}
 
+	public static function send_reminder_2h( $appointment ) {
+		$subject = '⏰ Recordatorio (2 horas): Su procedimiento médico – '
+			. wp_date( 'd/m/Y H:i', self::appt_timestamp( $appointment ), new DateTimeZone( RMS_TIMEZONE ) );
+
+		return self::send(
+			$appointment->patient_email,
+			$subject,
+			self::reminder_2h_template( $appointment )
+		);
+	}
+
 	/* ------------------------------------------------------------------ */
 	/* Email templates                                                      */
 	/* ------------------------------------------------------------------ */
@@ -160,6 +171,9 @@ class RMS_Email {
 
 	private static function confirmation_template( $appointment ) {
 		$name = esc_html( $appointment->patient_name );
+		$ts   = self::appt_timestamp( $appointment );
+		$tz   = new DateTimeZone( RMS_TIMEZONE );
+		$time = wp_date( 'H:i', $ts, $tz );
 		$card = self::details_card( $appointment, '#f8faff', '#e3eaf5', '#e8eef6' );
 
 		$body = '<p style="font-size:17px;color:#333;margin:0 0 20px;">Hola, <strong>' . $name . '</strong> 👋</p>
@@ -169,9 +183,16 @@ class RMS_Email {
 		. $card .
 		'<div style="background:#e8f5e9;border-left:4px solid #4caf50;border-radius:4px;padding:14px 18px;margin-bottom:24px;">
 			<p style="margin:0;color:#2e7d32;font-size:13px;line-height:1.7;">
-				<strong>💡 Día del procedimiento:</strong> Debe estar a las <strong>06:00 a.m.</strong> en el hospital <strong>Punta Pacífica</strong> en el <strong>quinto piso</strong>, departamento de <strong>admisión</strong> (en ayunas).
+				<strong>💡 Día del procedimiento:</strong> Debe estar a las <strong>' . esc_html( $time ) . '</strong> en el hospital <strong>Punta Pacífica</strong> en el <strong>quinto piso</strong>, departamento de <strong>admisión</strong> (en ayunas).
 			</p>
 		</div>
+		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 16px;">
+			Visita las indicaciones de preparación en tu guía:
+			<a href="https://pacificasalud.beforeaftermycare.com/guia-de-colonoscopia/" style="color:#1a73e8;text-decoration:underline;" target="_blank" rel="noopener noreferrer">Guía de Colonoscopia</a>
+		</p>
+		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 12px;">
+			¡Le deseamos mucho éxito en su procedimiento! 🌟
+		</p>
 		<p style="color:#555;font-size:14px;line-height:1.8;margin:0;">
 			Si necesita cancelar o reprogramar debe comunicarse con la secretaria o asistente del Doctor.
 		</p>';
@@ -187,6 +208,9 @@ class RMS_Email {
 	private static function reminder_template( $appointment ) {
 		$name  = esc_html( $appointment->patient_name );
 		$hours = (float) get_option( 'rms_reminder_hours', 24 );
+		$ts    = self::appt_timestamp( $appointment );
+		$tz    = new DateTimeZone( RMS_TIMEZONE );
+		$time  = wp_date( 'H:i', $ts, $tz );
 		$card  = self::details_card( $appointment, '#fff8f0', '#ffe0cc', '#ffe8d6' );
 
 		if ( $hours < 1 ) {
@@ -204,7 +228,7 @@ class RMS_Email {
 		. $card .
 		'<div style="background:#fff3cd;border-left:4px solid #ffc107;border-radius:4px;padding:14px 18px;margin-bottom:24px;">
 			<p style="margin:0;color:#856404;font-size:13px;line-height:1.7;">
-				<strong>⚠️ Día del procedimiento:</strong> Debe estar a las <strong>06:00 a.m.</strong> en el hospital <strong>Punta Pacífica</strong> en el <strong>quinto piso</strong>, departamento de <strong>admisión</strong> (en ayunas).
+				<strong>⚠️ Día del procedimiento:</strong> Debe estar a las <strong>' . esc_html( $time ) . '</strong> en el hospital <strong>Punta Pacífica</strong> en el <strong>quinto piso</strong>, departamento de <strong>admisión</strong> (en ayunas).
 			</p>
 		</div>
 		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 16px;">
@@ -228,6 +252,9 @@ class RMS_Email {
 
 	private static function reminder_48h_template( $appointment ) {
 		$name = esc_html( $appointment->patient_name );
+		$ts   = self::appt_timestamp( $appointment );
+		$tz   = new DateTimeZone( RMS_TIMEZONE );
+		$time = wp_date( 'H:i', $ts, $tz );
 		$card = self::details_card( $appointment, '#fff8f0', '#ffe0cc', '#ffe8d6' );
 
 		$body = '<p style="font-size:17px;color:#333;margin:0 0 20px;">Hola, <strong>' . $name . '</strong> 👋</p>
@@ -237,7 +264,7 @@ class RMS_Email {
 		. $card .
 		'<div style="background:#fff3cd;border-left:4px solid #ffc107;border-radius:4px;padding:14px 18px;margin-bottom:24px;">
 			<p style="margin:0;color:#856404;font-size:13px;line-height:1.7;">
-				<strong>⚠️ Día del procedimiento:</strong> Debe estar a las <strong>06:00 a.m.</strong> en el hospital <strong>Punta Pacífica</strong> en el <strong>quinto piso</strong>, departamento de <strong>admisión</strong> (en ayunas).
+				<strong>⚠️ Día del procedimiento:</strong> Debe estar a las <strong>' . esc_html( $time ) . '</strong> en el hospital <strong>Punta Pacífica</strong> en el <strong>quinto piso</strong>, departamento de <strong>admisión</strong> (en ayunas).
 			</p>
 		</div>
 		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 16px;">
@@ -255,6 +282,44 @@ class RMS_Email {
 			'linear-gradient(135deg,#ff6b35 0%,#e53935 100%)',
 			'⏰ Recordatorio de Cita (48 horas)',
 			'Su cita es en 48 horas',
+			$body
+		);
+	}
+
+	private static function reminder_2h_template( $appointment ) {
+		$name = esc_html( $appointment->patient_name );
+		$ts   = self::appt_timestamp( $appointment );
+		$tz   = new DateTimeZone( RMS_TIMEZONE );
+		$time = wp_date( 'H:i', $ts, $tz );
+		$card = self::details_card( $appointment, '#fff8f0', '#ffe0cc', '#ffe8d6' );
+
+		$body = '<p style="font-size:17px;color:#333;margin:0 0 20px;">Hola, <strong>' . $name . '</strong> 👋</p>
+		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 26px;">
+			¡Buenos días! En unas pocas horas tiene su <strong>cita médica programada</strong>. Este es su recordatorio final antes del procedimiento.
+		</p>'
+		. $card .
+		'<div style="background:#fff3cd;border-left:4px solid #ffc107;border-radius:4px;padding:14px 18px;margin-bottom:24px;">
+			<p style="margin:0;color:#856404;font-size:13px;line-height:1.7;">
+				<strong>⚠️ Día del procedimiento:</strong> Debe estar a las <strong>' . esc_html( $time ) . '</strong> en el hospital <strong>Punta Pacífica</strong> en el <strong>quinto piso</strong>, departamento de <strong>admisión</strong> (en ayunas).
+			</p>
+		</div>
+		<div style="background:#e3f2fd;border-left:4px solid #1a73e8;border-radius:4px;padding:14px 18px;margin-bottom:24px;">
+			<p style="margin:0;color:#0d47a1;font-size:13px;line-height:1.7;">
+				<strong>📋 Antes de salir:</strong> Le sugerimos revisar las indicaciones de admisión para asegurarse de llegar preparado. Consulte su guía:
+				<a href="https://pacificasalud.beforeaftermycare.com/guia-de-colonoscopia/" style="color:#1a73e8;text-decoration:underline;" target="_blank" rel="noopener noreferrer">Guía de Colonoscopia</a>
+			</p>
+		</div>
+		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 12px;">
+			¡Le deseamos mucho éxito en su procedimiento! 🌟
+		</p>
+		<p style="color:#555;font-size:14px;line-height:1.8;margin:0;">
+			Si necesita cancelar o reprogramar debe comunicarse con la secretaria o asistente del Doctor.
+		</p>';
+
+		return self::base_layout(
+			'linear-gradient(135deg,#ff6b35 0%,#e53935 100%)',
+			'⏰ Recordatorio de Cita (2 horas)',
+			'Su cita es en 2 horas',
 			$body
 		);
 	}
