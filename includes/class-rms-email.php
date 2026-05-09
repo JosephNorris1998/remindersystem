@@ -178,7 +178,7 @@ class RMS_Email {
 
 		$body = '<p style="font-size:17px;color:#333;margin:0 0 20px;">Hola, <strong>' . $name . '</strong> 👋</p>
 		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 26px;">
-			Le confirmamos que su cita médica ha sido registrada correctamente en nuestro sistema. A continuación encontrará los detalles:
+			Le confirmamos que ha registrado su cita en su guía integral de colonoscopia. A continuación encontrará los detalles:
 		</p>'
 		. $card .
 		'<div style="background:#e8f5e9;border-left:4px solid #4caf50;border-radius:4px;padding:14px 18px;margin-bottom:24px;">
