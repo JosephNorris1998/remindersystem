@@ -99,12 +99,12 @@
 							: 'Error al enviar. Intente de nuevo.';
 
 						$message.addClass('rms-error').html(errMsg).show();
-						$submitBtn.prop('disabled', false).text('Registrar cita');
+						$submitBtn.prop('disabled', false).text('Haz clic para configurar tus alertas');
 					}
 				}
 			).fail(function () {
 				$message.addClass('rms-error').html('Error de conexión. Por favor intente de nuevo.').show();
-				$submitBtn.prop('disabled', false).text('Registrar cita');
+				$submitBtn.prop('disabled', false).text('Haz clic para configurar tus alertas');
 			});
 		});
 
