@@ -71,14 +71,14 @@ class RMS_Shortcode {
 
 			<div class="rms-notice">
 				<p>
-					<strong>Aviso importante:</strong> Registre la fecha de su admisión y su procedimiento de acuerdo al correo recibido por la asistente médica.
+					<strong>Aviso importante:</strong> Registre la fecha de su cita. Asegúrese que la fecha y hora anotada sea la cita indicada para su procedimiento.
 				</p>
 			</div>
 
 			<div class="rms-checkbox-row">
 				<label class="rms-checkbox-label" for="rms-confirm-checkbox">
 					<input type="checkbox" id="rms-confirm-checkbox">
-					<span>Confirmo que he registrado la fecha de mi cita y procedimiento de acuerdo al correo recibido por la asistente médica.</span>
+					<span>Completa la información para configurar tus alertas</span>
 				</label>
 			</div>
 
@@ -114,7 +114,7 @@ class RMS_Shortcode {
 				</div>
 
 				<div class="rms-submit-row" id="rms-submit-row">
-					<button type="submit" id="rms-submit-btn" disabled>Registrar cita</button>
+					<button type="submit" id="rms-submit-btn" disabled>Haz clic para configurar tus alertas</button>
 				</div>
 
 				<div id="rms-form-message" style="display:none;" role="alert"></div>
