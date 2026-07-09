@@ -227,7 +227,7 @@ class RMS_Email {
 		. $card .
 		'<div style="background:#fff3cd;border-left:4px solid #ffc107;border-radius:4px;padding:14px 18px;margin-bottom:24px;">
 			<p style="margin:0;color:#856404;font-size:13px;line-height:1.7;">
-				<strong>⚠️ Día del procedimiento:</strong> Debe estar a las <strong>' . esc_html( $time ) . '</strong> en el hospital <strong>Punta Pacífica</strong> en el <strong>quinto piso</strong>, departamento de <strong>admisión</strong> (en ayunas).
+				<strong>💡 Día del procedimiento:</strong> Debe estar a las <strong>' . esc_html( $time ) . '</strong> en el hospital <strong>Punta Pacífica</strong> en el <strong>quinto piso</strong>, o en el <strong>3er piso</strong> si su procedimiento es en Costa del Este, departamento de <strong>admisión</strong> (en ayunas).
 			</p>
 		</div>
 		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 16px;">
@@ -263,7 +263,7 @@ class RMS_Email {
 		. $card .
 		'<div style="background:#fff3cd;border-left:4px solid #ffc107;border-radius:4px;padding:14px 18px;margin-bottom:24px;">
 			<p style="margin:0;color:#856404;font-size:13px;line-height:1.7;">
-				<strong>⚠️ Día del procedimiento:</strong> Debe estar a las <strong>' . esc_html( $time ) . '</strong> en el hospital <strong>Punta Pacífica</strong> en el <strong>quinto piso</strong>, departamento de <strong>admisión</strong> (en ayunas).
+				<strong>💡 Día del procedimiento:</strong> Debe estar a las <strong>' . esc_html( $time ) . '</strong> en el hospital <strong>Punta Pacífica</strong> en el <strong>quinto piso</strong>, o en el <strong>3er piso</strong> si su procedimiento es en Costa del Este, departamento de <strong>admisión</strong> (en ayunas).
 			</p>
 		</div>
 		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 16px;">
