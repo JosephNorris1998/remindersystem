@@ -62,6 +62,11 @@
 			}
 		});
 
+		/* ---- Success modal close → reload page ---- */
+		$('#rms-modal-close-btn, #rms-success-modal-overlay').on('click', function () {
+			window.location.reload();
+		});
+
 		/* ---- Form submit ---- */
 		$form.on('submit', function (e) {
 			e.preventDefault();
@@ -81,18 +86,13 @@
 				},
 				function (response) {
 					if (response.success) {
-						$message.addClass('rms-success').html(response.data.message).show();
+						/* Show success modal */
+						$('#rms-success-modal').show();
 
-						/* Reset form */
+						/* Reset form immediately so a manual reload won't re-submit */
 						$form[0].reset();
 						$checkbox.prop('checked', false).trigger('change');
 						if (fp) { fp.clear(); }
-
-						/* Smooth scroll to message */
-						$('html, body').animate(
-							{ scrollTop: $message.offset().top - 80 },
-							350
-						);
 					} else {
 						var errMsg = (response.data && response.data.message)
 							? response.data.message

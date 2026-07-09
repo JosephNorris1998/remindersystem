@@ -44,8 +44,7 @@ class RMS_Email {
 	}
 
 	public static function send_confirmation( $appointment ) {
-		$subject = '✅ Confirmación de su cita médica – '
-			. wp_date( 'd/m/Y H:i', self::appt_timestamp( $appointment ), new DateTimeZone( RMS_TIMEZONE ) );
+		$subject = '✅ Confirmación del acceso a su guía de colonoscopia';
 
 		return self::send(
 			$appointment->patient_email,
@@ -178,12 +177,12 @@ class RMS_Email {
 
 		$body = '<p style="font-size:17px;color:#333;margin:0 0 20px;">Hola, <strong>' . $name . '</strong> 👋</p>
 		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 26px;">
-			Le confirmamos que ha registrado su cita en su guía integral de colonoscopia. A continuación encontrará los detalles:
+			Le confirmamos que ya tiene acceso a los contenidos de la guía integral de colonoscopia con la siguiente información:
 		</p>'
 		. $card .
 		'<div style="background:#e8f5e9;border-left:4px solid #4caf50;border-radius:4px;padding:14px 18px;margin-bottom:24px;">
 			<p style="margin:0;color:#2e7d32;font-size:13px;line-height:1.7;">
-				<strong>💡 Día del procedimiento:</strong> Debe estar a las <strong>' . esc_html( $time ) . '</strong> en el hospital <strong>Punta Pacífica</strong> en el <strong>quinto piso</strong>, departamento de <strong>admisión</strong> (en ayunas).
+				<strong>💡 Día del procedimiento:</strong> Debe estar a las <strong>' . esc_html( $time ) . '</strong> en el hospital <strong>Punta Pacífica</strong> en el <strong>quinto piso</strong>, o en el <strong>3er piso</strong> si su procedimiento es en Costa del Este, departamento de <strong>admisión</strong> (en ayunas).
 			</p>
 		</div>
 		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 16px;">
