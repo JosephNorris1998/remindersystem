@@ -187,6 +187,58 @@
 	color: #c62828;
 }
 
+/* ---- Success modal ---- */
+#rms-success-modal {
+	position: fixed;
+	inset: 0;
+	z-index: 99999;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+#rms-success-modal-overlay {
+	position: absolute;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.5);
+}
+
+#rms-success-modal-box {
+	position: relative;
+	background: #fff;
+	border-radius: 10px;
+	padding: 32px 36px;
+	max-width: 400px;
+	width: 90%;
+	text-align: center;
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+	animation: rmsSlideIn 0.25s ease;
+}
+
+#rms-success-modal-box p {
+	font-size: 16px;
+	font-weight: 600;
+	color: #2e7d32;
+	margin: 0 0 22px;
+	line-height: 1.5;
+}
+
+#rms-modal-close-btn {
+	background: #1a73e8;
+	color: #fff;
+	border: none;
+	padding: 10px 28px;
+	border-radius: 6px;
+	font-size: 15px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background 0.2s;
+}
+
+#rms-modal-close-btn:hover {
+	background: #1558c4;
+}
+
 /* ---- Flatpickr overrides ---- */
 .flatpickr-calendar {
 	border-radius: 10px !important;

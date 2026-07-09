@@ -69,6 +69,15 @@ class RMS_Shortcode {
 		?>
 		<div class="rms-form-wrapper" id="rms-form-wrapper">
 
+			<!-- Success modal -->
+			<div id="rms-success-modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="rms-modal-title">
+				<div id="rms-success-modal-overlay"></div>
+				<div id="rms-success-modal-box">
+					<p id="rms-modal-title">✅ Se ha programado su alerta con éxito.</p>
+					<button type="button" id="rms-modal-close-btn">Cerrar</button>
+				</div>
+			</div>
+
 			<div class="rms-notice">
 				<p>
 					<strong>Aviso importante:</strong> Registre la fecha de su cita. Asegúrese que la fecha y hora anotada sea la cita indicada para su procedimiento.
