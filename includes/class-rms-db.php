@@ -27,6 +27,8 @@ class RMS_DB {
 			reminder_48h_sent_at datetime              DEFAULT NULL,
 			reminder_2h_sent     tinyint(1)   NOT NULL DEFAULT 0,
 			reminder_2h_sent_at  datetime              DEFAULT NULL,
+			survey_sent          tinyint(1)   NOT NULL DEFAULT 0,
+			survey_sent_at       datetime              DEFAULT NULL,
 			created_at           datetime     NOT NULL,
 			PRIMARY KEY (id)
 		) {$charset_collate};";
@@ -233,6 +235,55 @@ class RMS_DB {
 	}
 
 	/**
+	 * Return appointments eligible for the post-procedure satisfaction survey.
+	 *
+	 * Logic (retroactive): appointment date is in the past AND at least 24 hours
+	 * have elapsed since the appointment AND the survey has not been sent yet.
+	 */
+	public static function get_pending_survey_emails() {
+		global $wpdb;
+		$table = self::get_table_name();
+		$now   = self::get_panama_now();
+
+		return $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT * FROM {$table}
+				 WHERE survey_sent = 0
+				   AND appointment_date < %s
+				   AND TIMESTAMPDIFF(HOUR, appointment_date, %s) >= 24",
+				$now,
+				$now
+			)
+		);
+	}
+
+	public static function mark_survey_sent( $id ) {
+		return self::update(
+			$id,
+			array(
+				'survey_sent'    => 1,
+				'survey_sent_at' => self::get_panama_now(),
+			)
+		);
+	}
+
+	/**
+	 * Return all appointments to which the survey email has already been sent,
+	 * ordered by the time it was sent (most recent first).
+	 */
+	public static function get_survey_sent_list() {
+		global $wpdb;
+		$table = self::get_table_name();
+
+		return $wpdb->get_results(
+			"SELECT id, patient_name, patient_email, appointment_date, procedure_name, survey_sent_at
+			 FROM {$table}
+			 WHERE survey_sent = 1
+			 ORDER BY survey_sent_at DESC"
+		);
+	}
+
+	/**
 	 * Run schema upgrades when the DB version doesn't match the plugin version.
 	 * Safe to call on every page load — uses an option flag to avoid redundant work.
 	 *
@@ -265,6 +316,14 @@ class RMS_DB {
 
 		if ( ! empty( $columns ) && ! in_array( 'reminder_2h_sent_at', $columns, true ) ) {
 			$wpdb->query( "ALTER TABLE `" . esc_sql( $table ) . "` ADD COLUMN reminder_2h_sent_at datetime DEFAULT NULL" );
+		}
+
+		if ( ! empty( $columns ) && ! in_array( 'survey_sent', $columns, true ) ) {
+			$wpdb->query( "ALTER TABLE `" . esc_sql( $table ) . "` ADD COLUMN survey_sent tinyint(1) NOT NULL DEFAULT 0" );
+		}
+
+		if ( ! empty( $columns ) && ! in_array( 'survey_sent_at', $columns, true ) ) {
+			$wpdb->query( "ALTER TABLE `" . esc_sql( $table ) . "` ADD COLUMN survey_sent_at datetime DEFAULT NULL" );
 		}
 	}
 }

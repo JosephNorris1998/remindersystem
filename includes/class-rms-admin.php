@@ -9,10 +9,11 @@ class RMS_Admin {
 		add_action( 'admin_init',            array( $this, 'handle_forms' ) );
 
 		/* AJAX handlers */
-		add_action( 'wp_ajax_rms_send_reminder',       array( $this, 'ajax_send_reminder' ) );
-		add_action( 'wp_ajax_rms_delete_appointment',  array( $this, 'ajax_delete_appointment' ) );
-		add_action( 'wp_ajax_rms_add_procedure',       array( $this, 'ajax_add_procedure' ) );
-		add_action( 'wp_ajax_rms_delete_procedure',    array( $this, 'ajax_delete_procedure' ) );
+		add_action( 'wp_ajax_rms_send_reminder',        array( $this, 'ajax_send_reminder' ) );
+		add_action( 'wp_ajax_rms_delete_appointment',   array( $this, 'ajax_delete_appointment' ) );
+		add_action( 'wp_ajax_rms_add_procedure',        array( $this, 'ajax_add_procedure' ) );
+		add_action( 'wp_ajax_rms_delete_procedure',     array( $this, 'ajax_delete_procedure' ) );
+		add_action( 'wp_ajax_rms_send_survey_manual',   array( $this, 'ajax_send_survey_manual' ) );
 	}
 
 	/* ------------------------------------------------------------------ */
@@ -55,6 +56,15 @@ class RMS_Admin {
 			'manage_options',
 			'rms-settings',
 			array( $this, 'page_settings' )
+		);
+
+		add_submenu_page(
+			'rms-records',
+			__( 'Encuesta de Satisfacción', 'reminder-system' ),
+			__( 'Encuesta Satisfacción', 'reminder-system' ),
+			'manage_options',
+			'rms-survey',
+			array( $this, 'page_survey' )
 		);
 	}
 
@@ -212,6 +222,25 @@ class RMS_Admin {
 
 		update_option( 'rms_procedures', wp_json_encode( $procedures ) );
 		wp_send_json_success( array( 'procedures' => $procedures ) );
+	}
+
+	public function ajax_send_survey_manual() {
+		check_ajax_referer( 'rms_admin_nonce', 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => 'Sin permisos.' ) );
+		}
+
+		$email = sanitize_email( wp_unslash( $_POST['email'] ?? '' ) );
+		if ( ! is_email( $email ) ) {
+			wp_send_json_error( array( 'message' => 'Correo electrónico inválido.' ) );
+		}
+
+		$sent = RMS_Email::send_survey_manual( $email );
+		if ( $sent ) {
+			wp_send_json_success( array( 'message' => 'Encuesta enviada exitosamente a ' . esc_html( $email ) . '.' ) );
+		} else {
+			wp_send_json_error( array( 'message' => 'No se pudo enviar la encuesta. Verifique la configuración de correo.' ) );
+		}
 	}
 
 	/* ------------------------------------------------------------------ */
@@ -520,6 +549,115 @@ class RMS_Admin {
 				<?php submit_button( '💾 ' . __( 'Guardar Configuración', 'reminder-system' ), 'primary', 'rms_save_settings' ); ?>
 			</form>
 		</div>
+		<?php
+	}
+
+	public function page_survey() {
+		$sent_list = RMS_DB::get_survey_sent_list();
+		?>
+		<div class="wrap rms-wrap">
+			<h1 class="wp-heading-inline">
+				<span class="dashicons dashicons-email-alt" style="vertical-align:middle;font-size:26px;line-height:1;margin-right:6px;color:#1a73e8;"></span>
+				<?php esc_html_e( 'Encuesta de Satisfacción Post-Procedimiento', 'reminder-system' ); ?>
+			</h1>
+			<hr class="wp-header-end">
+
+			<!-- Manual send form -->
+			<div class="rms-card">
+				<h3>📧 <?php esc_html_e( 'Envío Manual', 'reminder-system' ); ?></h3>
+				<p class="description"><?php esc_html_e( 'Ingrese el correo electrónico del paciente para forzar el envío manual de la encuesta de satisfacción. El remitente siempre será pacificasalud@beforeaftermycare.com.', 'reminder-system' ); ?></p>
+				<div style="display:flex;align-items:center;gap:12px;margin-top:16px;">
+					<input type="email" id="rms-survey-email" class="regular-text"
+					       placeholder="<?php esc_attr_e( 'correo@ejemplo.com', 'reminder-system' ); ?>"
+					       style="max-width:320px;">
+					<button id="rms-btn-send-survey" class="button button-primary">
+						📤 <?php esc_html_e( 'Enviar Encuesta', 'reminder-system' ); ?>
+					</button>
+				</div>
+				<div id="rms-survey-message" style="display:none;margin-top:14px;"></div>
+			</div>
+
+			<!-- Sent log table -->
+			<div class="rms-card" style="margin-top:24px;">
+				<h3>📋 <?php esc_html_e( 'Registro de Envíos', 'reminder-system' ); ?></h3>
+				<p class="description"><?php esc_html_e( 'Pacientes que han recibido el correo de encuesta de satisfacción (automático o manual).', 'reminder-system' ); ?></p>
+
+				<table class="wp-list-table widefat fixed striped rms-table" style="margin-top:16px;">
+					<thead>
+						<tr>
+							<th style="width:50px;">ID</th>
+							<th><?php esc_html_e( 'Paciente', 'reminder-system' ); ?></th>
+							<th><?php esc_html_e( 'Email', 'reminder-system' ); ?></th>
+							<th><?php esc_html_e( 'Procedimiento', 'reminder-system' ); ?></th>
+							<th><?php esc_html_e( 'Fecha Cita', 'reminder-system' ); ?></th>
+							<th><?php esc_html_e( 'Encuesta Enviada', 'reminder-system' ); ?></th>
+						</tr>
+					</thead>
+					<tbody>
+					<?php if ( empty( $sent_list ) ) : ?>
+						<tr>
+							<td colspan="6" style="text-align:center;padding:40px;color:#888;">
+								<?php esc_html_e( 'No se ha enviado ninguna encuesta todavía.', 'reminder-system' ); ?>
+							</td>
+						</tr>
+					<?php else : foreach ( $sent_list as $item ) : ?>
+						<tr>
+							<td><?php echo absint( $item->id ); ?></td>
+							<td><strong><?php echo esc_html( $item->patient_name ); ?></strong></td>
+							<td><?php echo esc_html( $item->patient_email ); ?></td>
+							<td><?php echo esc_html( $item->procedure_name ); ?></td>
+							<td><?php echo esc_html( date_i18n( 'd/m/Y H:i', strtotime( $item->appointment_date ) ) ); ?></td>
+							<td>
+								<span class="rms-badge rms-badge-sent">✅ Enviado</span>
+								<?php if ( $item->survey_sent_at ) : ?>
+									<br><small style="color:#888;"><?php echo esc_html( date_i18n( 'd/m/Y H:i', strtotime( $item->survey_sent_at ) ) ); ?></small>
+								<?php endif; ?>
+							</td>
+						</tr>
+					<?php endforeach; endif; ?>
+					</tbody>
+				</table>
+
+				<p class="description" style="margin-top:12px;">
+					<?php printf( esc_html__( 'Total de encuestas enviadas: %d', 'reminder-system' ), count( $sent_list ) ); ?>
+				</p>
+			</div>
+		</div>
+
+		<script>
+		jQuery(function($){
+			$('#rms-btn-send-survey').on('click', function(){
+				var email   = $('#rms-survey-email').val().trim();
+				var $msg    = $('#rms-survey-message');
+				var $btn    = $(this);
+
+				if ( ! email ) {
+					$msg.html('<div class="notice notice-error inline"><p><?php echo esc_js( __( 'Por favor ingrese un correo electrónico.', 'reminder-system' ) ); ?></p></div>').show();
+					return;
+				}
+
+				$btn.prop('disabled', true).text('<?php echo esc_js( __( 'Enviando…', 'reminder-system' ) ); ?>');
+				$msg.hide();
+
+				$.post(rmsAdmin.ajaxUrl, {
+					action : 'rms_send_survey_manual',
+					nonce  : rmsAdmin.nonce,
+					email  : email
+				}, function(response){
+					if ( response.success ) {
+						$msg.html('<div class="notice notice-success inline"><p>' + response.data.message + '</p></div>').show();
+						$('#rms-survey-email').val('');
+					} else {
+						$msg.html('<div class="notice notice-error inline"><p>' + response.data.message + '</p></div>').show();
+					}
+				}).fail(function(){
+					$msg.html('<div class="notice notice-error inline"><p><?php echo esc_js( __( 'Error de conexión. Intente de nuevo.', 'reminder-system' ) ); ?></p></div>').show();
+				}).always(function(){
+					$btn.prop('disabled', false).text('<?php echo esc_js( __( '📤 Enviar Encuesta', 'reminder-system' ) ); ?>');
+				});
+			});
+		});
+		</script>
 		<?php
 	}
 }

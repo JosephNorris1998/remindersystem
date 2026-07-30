@@ -108,5 +108,27 @@ class RMS_Cron {
 				error_log( sprintf( '[RMS] Fallo al enviar recordatorio 2h: cita ID %d (%s).', $appointment->id, $appointment->patient_email ) );
 			}
 		}
+
+		// Process post-procedure satisfaction survey emails (retroactive: >= 24 h after appointment).
+		$appointments_survey = RMS_DB::get_pending_survey_emails();
+
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( sprintf(
+				'[RMS] Encuestas de satisfacción pendientes encontradas: %d',
+				count( $appointments_survey )
+			) );
+		}
+
+		foreach ( $appointments_survey as $appointment ) {
+			$sent = RMS_Email::send_survey( $appointment );
+			if ( $sent ) {
+				RMS_DB::mark_survey_sent( $appointment->id );
+				if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+					error_log( sprintf( '[RMS] Encuesta de satisfacción enviada: cita ID %d (%s).', $appointment->id, $appointment->patient_email ) );
+				}
+			} elseif ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				error_log( sprintf( '[RMS] Fallo al enviar encuesta de satisfacción: cita ID %d (%s).', $appointment->id, $appointment->patient_email ) );
+			}
+		}
 	}
 }
