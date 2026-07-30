@@ -86,6 +86,55 @@ class RMS_Email {
 		);
 	}
 
+	/**
+	 * Send the post-procedure satisfaction survey email to a patient record.
+	 * The sender is always the fixed address pacificasalud@beforeaftermycare.com.
+	 */
+	public static function send_survey( $appointment ) {
+		return self::send_survey_to(
+			$appointment->patient_email,
+			$appointment->patient_name
+		);
+	}
+
+	/**
+	 * Send the survey email manually to any address.
+	 * Patient name may be empty; a generic greeting will be used in that case.
+	 */
+	public static function send_survey_manual( $email, $patient_name = '' ) {
+		return self::send_survey_to( $email, $patient_name );
+	}
+
+	/**
+	 * Internal helper: build and dispatch the survey email.
+	 * Forces the From address to pacificasalud@beforeaftermycare.com regardless
+	 * of the plugin's general "from email" setting.
+	 */
+	private static function send_survey_to( $email, $patient_name = '' ) {
+		$subject = 'Encuesta de Satisfacción – Pacífica Salud';
+
+		$fixed_from_email = 'pacificasalud@beforeaftermycare.com';
+		$fixed_from_name  = 'Pacífica Salud';
+
+		$headers = array(
+			'Content-Type: text/html; charset=UTF-8',
+			'From: ' . $fixed_from_name . ' <' . $fixed_from_email . '>',
+		);
+
+		$force_email = static function() use ( $fixed_from_email ) { return $fixed_from_email; };
+		$force_name  = static function() use ( $fixed_from_name )  { return $fixed_from_name;  };
+
+		add_filter( 'wp_mail_from',      $force_email );
+		add_filter( 'wp_mail_from_name', $force_name );
+
+		$sent = wp_mail( $email, $subject, self::survey_template( $patient_name ), $headers );
+
+		remove_filter( 'wp_mail_from',      $force_email );
+		remove_filter( 'wp_mail_from_name', $force_name );
+
+		return $sent;
+	}
+
 	/* ------------------------------------------------------------------ */
 	/* Email templates                                                      */
 	/* ------------------------------------------------------------------ */
@@ -321,5 +370,98 @@ class RMS_Email {
 			'Su cita es en 2 horas',
 			$body
 		);
+	}
+
+	/**
+	 * Returns the HTML body for the post-procedure satisfaction survey email.
+	 *
+	 * @param string $patient_name The patient's full name, or empty for a generic greeting.
+	 */
+	private static function survey_template( $patient_name = '' ) {
+		$greeting = ! empty( $patient_name )
+			? 'Estimado <strong>' . esc_html( $patient_name ) . '</strong>'
+			: 'Estimado <strong>Paciente</strong>';
+
+		return '<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Encuesta de Satisfacción</title>
+</head>
+<body>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f4f8;padding:40px 0;">
+        <tr><td align="center">
+
+        <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#fff;border-radius:12px;overflow:hidden;">
+
+        <!-- Logo -->
+        <tr>
+            <td style="text-align:center;padding:30px 30px 0;">
+                <img src="https://pacificasalud.beforeaftermycare.com/wp-content/uploads/2026/05/pacifica-salud-logo-correos.jpg" alt="Pacífica Salud" style="max-width:280px;height:auto;">
+            </td>
+        </tr>
+
+        <!-- Header -->
+        <tr>
+            <td style="background:linear-gradient(135deg,#1a73e8 0%,#0d47a1 100%);padding:30px;text-align:center;margin-top:20px;">
+                <h1 style="color:#fff;margin:0;font-size:26px;font-weight:700;">Encuesta de Satisfacción</h1>
+                <p style="color:rgba(255,255,255,.85);margin:10px 0 0;font-size:15px;">Su opinión es muy importante para nosotros</p>
+            </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+            <td style="padding:36px 30px;">
+
+                <p style="font-size:16px;color:#333;margin:0 0 16px;">' . $greeting . ',</p>
+                <p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 26px;">Reciba un cordial saludo de parte de todo el equipo.</p>
+
+                <!-- Survey card -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8faff;border:1px solid #e3eaf5;border-radius:10px;margin-bottom:28px;">
+                    <tr>
+                        <td style="padding:24px 26px;">
+                            <h3 style="color:#1a1a2e;font-size:17px;margin:0 0 14px;">¡Su opinión nos ayuda a mejorar!</h3>
+
+                            <p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 20px;">Para nosotros es muy importante conocer su experiencia. Sabemos que recientemente completó su procedimiento de Colonoscopia en Pacífica Salud. Le invitamos a dedicar unos minutos para completar nuestra breve encuesta de satisfacción.</p>
+
+                            <table cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td style="background:#1a73e8;border-radius:6px;text-align:center;">
+                                        <a href="https://pacificasalud.beforeaftermycare.com/guia-de-colonoscopia/#encuesta"
+                                           style="display:inline-block;padding:14px 28px;color:#fff;font-size:15px;font-weight:600;text-decoration:none;">
+                                            Completar encuesta
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+
+                <p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 20px;">Si usted ya completó esta encuesta previamente, favor omita este mensaje.</p>
+
+                <p style="color:#555;font-size:14px;margin:0 0 4px;">Atentamente,</p>
+                <p style="color:#333;font-size:14px;font-weight:600;margin:0 0 4px;">Asistentes de la clínica</p>
+                <p style="color:#555;font-size:14px;margin:0;">Pacífica Salud</p>
+
+            </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+            <td style="background:#f8faff;border-top:1px solid #e3eaf5;padding:20px 30px;text-align:center;">
+                <p style="color:#888;font-size:13px;margin:0 0 6px;">Pacífica Salud</p>
+                <p style="color:#bbb;font-size:12px;margin:0;">Este es un correo automático, por favor no responda a este mensaje.</p>
+            </td>
+        </tr>
+
+        </table>
+        </td></tr>
+    </table>
+
+</body>
+</html>';
 	}
 }
