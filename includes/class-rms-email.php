@@ -429,7 +429,7 @@ class RMS_Email {
                             <table cellpadding="0" cellspacing="0">
                                 <tr>
                                     <td style="background:#1a73e8;border-radius:6px;text-align:center;">
-                                        <a href="https://pacificasalud.beforeaftermycare.com/guia-de-colonoscopia/#encuesta"
+                                        <a href="https://pacificasalud.beforeaftermycare.com/encuesta/"
                                            style="display:inline-block;padding:14px 28px;color:#fff;font-size:15px;font-weight:600;text-decoration:none;">
                                             Completar encuesta
                                         </a>
