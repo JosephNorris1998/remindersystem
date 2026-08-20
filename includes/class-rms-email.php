@@ -86,6 +86,26 @@ class RMS_Email {
 		);
 	}
 
+	public static function send_reminder_prep24h( $appointment ) {
+		$subject = '💧 Recordatorio de Preparación: Su colonoscopia es mañana';
+
+		return self::send(
+			$appointment->patient_email,
+			$subject,
+			self::reminder_prep24h_template( $appointment )
+		);
+	}
+
+	public static function send_reminder_prep10h( $appointment ) {
+		$subject = '💧 Recordatorio: ¿Ya inició su preparación para la colonoscopia?';
+
+		return self::send(
+			$appointment->patient_email,
+			$subject,
+			self::reminder_prep10h_template( $appointment )
+		);
+	}
+
 	/**
 	 * Send the post-procedure satisfaction survey email to a patient record.
 	 * The sender is always the fixed address pacificasalud@beforeaftermycare.com.
@@ -368,6 +388,95 @@ class RMS_Email {
 			'linear-gradient(135deg,#ff6b35 0%,#e53935 100%)',
 			'⏰ Recordatorio de Cita (2 horas)',
 			'Su cita es en 2 horas',
+			$body
+		);
+	}
+
+	private static function reminder_prep24h_template( $appointment ) {
+		$name = esc_html( $appointment->patient_name );
+		$card = self::details_card( $appointment, '#f8faff', '#e3eaf5', '#e8eef6' );
+
+		$body = '<p style="font-size:17px;color:#333;margin:0 0 20px;">Hola, <strong>' . $name . '</strong> 👋</p>
+		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 20px;">
+			Su procedimiento de <strong>colonoscopia se acerca</strong> y queremos recordarle que continúe siguiendo cuidadosamente las indicaciones de preparación proporcionadas por su médico.
+		</p>
+		<h3 style="color:#1a1a2e;font-size:18px;margin:0 0 14px;">💧 ¿Cómo va su limpieza de colon?</h3>
+		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 14px;">
+			Ingrese a su Guía de Colonoscopia y vaya a la sección "Limpieza de Colon → Fase 3: Verificación de Limpieza".
+		</p>
+		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 14px;">
+			Compare el resultado con la imagen de referencia que aparece en la guía.
+		</p>
+		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 14px;">
+			Si ya alcanzó el color indicado como adecuado, por favor presione:
+		</p>
+		<p style="color:#333;font-size:14px;line-height:1.8;margin:0 0 20px;">
+			<strong>✅ Ya logré este color</strong>
+		</p>
+		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 20px;">
+			Esto nos permite conocer cómo avanza su preparación antes del procedimiento.
+		</p>'
+		. $card .
+		'<table cellpadding="0" cellspacing="0" style="margin:0 auto 24px;">
+			<tr>
+				<td style="background:#0288d1;border-radius:8px;text-align:center;">
+					<a href="https://pacificasalud.beforeaftermycare.com/guia-de-colonoscopia/#preparacion"
+					   style="display:inline-block;padding:16px 28px;color:#fff;font-size:15px;font-weight:700;letter-spacing:.3px;text-decoration:none;"
+					   target="_blank" rel="noopener noreferrer">
+						VERIFICAR MI PREPARACIÓN
+					</a>
+				</td>
+			</tr>
+		</table>
+		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 12px;">
+			Si todavía no ha alcanzado ese resultado, continúe siguiendo las instrucciones que recibió de su médico.
+		</p>
+		<p style="color:#555;font-size:14px;line-height:1.8;margin:0;">
+			Si tiene alguna duda sobre su preparación, comuníquese con la secretaria o asistente de su doctor.
+		</p>';
+
+		return self::base_layout(
+			'linear-gradient(135deg,#1976d2 0%,#0288d1 100%)',
+			'💧 Recordatorio de Preparación',
+			'Su colonoscopia es mañana',
+			$body
+		);
+	}
+
+	private static function reminder_prep10h_template( $appointment ) {
+		$name = esc_html( $appointment->patient_name );
+		$card = self::details_card( $appointment, '#effaf8', '#cfeee8', '#dff3ee' );
+
+		$body = '<p style="font-size:17px;color:#333;margin:0 0 20px;">Hola, <strong>' . $name . '</strong> 👋</p>
+		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 14px;">
+			¿Ya inició su preparación para la colonoscopia?
+		</p>
+		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 20px;">
+			Si ya comenzó siguiendo las indicaciones proporcionadas por su médico, ingrese a Limpieza de Colon y confírmenos que inició su preparación.
+		</p>'
+		. $card .
+		'<table cellpadding="0" cellspacing="0" style="margin:0 auto 24px;">
+			<tr>
+				<td style="background:#00897b;border-radius:8px;text-align:center;">
+					<a href="https://pacificasalud.beforeaftermycare.com/guia-de-colonoscopia/#preparacion"
+					   style="display:inline-block;padding:16px 28px;color:#fff;font-size:15px;font-weight:700;letter-spacing:.3px;text-decoration:none;"
+					   target="_blank" rel="noopener noreferrer">
+						IR A LIMPIEZA DE COLON
+					</a>
+				</td>
+			</tr>
+		</table>
+		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 12px;">
+			Si aún no ha iniciado su preparación, por favor hágalo ahora siguiendo las indicaciones de su médico.
+		</p>
+		<p style="color:#555;font-size:14px;line-height:1.8;margin:0;">
+			Si tiene alguna duda, comuníquese con la secretaria o asistente de su doctor.
+		</p>';
+
+		return self::base_layout(
+			'linear-gradient(135deg,#00897b 0%,#00695c 100%)',
+			'💧 Recordatorio de Preparación',
+			'¿Ya inició su preparación para la colonoscopia?',
 			$body
 		);
 	}

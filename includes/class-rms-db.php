@@ -25,6 +25,10 @@ class RMS_DB {
 			reminder_sent_at     datetime              DEFAULT NULL,
 			reminder_48h_sent    tinyint(1)   NOT NULL DEFAULT 0,
 			reminder_48h_sent_at datetime              DEFAULT NULL,
+			reminder_prep24h_sent    tinyint(1)   NOT NULL DEFAULT 0,
+			reminder_prep24h_sent_at datetime              DEFAULT NULL,
+			reminder_prep10h_sent    tinyint(1)   NOT NULL DEFAULT 0,
+			reminder_prep10h_sent_at datetime              DEFAULT NULL,
 			reminder_2h_sent     tinyint(1)   NOT NULL DEFAULT 0,
 			reminder_2h_sent_at  datetime              DEFAULT NULL,
 			survey_sent          tinyint(1)   NOT NULL DEFAULT 0,
@@ -205,6 +209,64 @@ class RMS_DB {
 		);
 	}
 
+	public static function get_pending_prep24h_reminders() {
+		global $wpdb;
+		$table          = self::get_table_name();
+		$target_seconds = 24 * 3600; // Fixed 24-hour target
+		$now            = self::get_panama_now();
+
+		return $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT * FROM {$table}
+				 WHERE reminder_prep24h_sent = 0
+				   AND DATE_SUB(appointment_date, INTERVAL %d SECOND) <= %s
+				   AND appointment_date > %s",
+				$target_seconds,
+				$now,
+				$now
+			)
+		);
+	}
+
+	public static function mark_reminder_prep24h_sent( $id ) {
+		return self::update(
+			$id,
+			array(
+				'reminder_prep24h_sent'    => 1,
+				'reminder_prep24h_sent_at' => self::get_panama_now(),
+			)
+		);
+	}
+
+	public static function get_pending_prep10h_reminders() {
+		global $wpdb;
+		$table          = self::get_table_name();
+		$target_seconds = 10 * 3600; // Fixed 10-hour target
+		$now            = self::get_panama_now();
+
+		return $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT * FROM {$table}
+				 WHERE reminder_prep10h_sent = 0
+				   AND DATE_SUB(appointment_date, INTERVAL %d SECOND) <= %s
+				   AND appointment_date > %s",
+				$target_seconds,
+				$now,
+				$now
+			)
+		);
+	}
+
+	public static function mark_reminder_prep10h_sent( $id ) {
+		return self::update(
+			$id,
+			array(
+				'reminder_prep10h_sent'    => 1,
+				'reminder_prep10h_sent_at' => self::get_panama_now(),
+			)
+		);
+	}
+
 	public static function get_pending_2h_reminders() {
 		global $wpdb;
 		$table          = self::get_table_name();
@@ -316,6 +378,22 @@ class RMS_DB {
 
 		if ( ! empty( $columns ) && ! in_array( 'reminder_2h_sent_at', $columns, true ) ) {
 			$wpdb->query( "ALTER TABLE `" . esc_sql( $table ) . "` ADD COLUMN reminder_2h_sent_at datetime DEFAULT NULL" );
+		}
+
+		if ( ! empty( $columns ) && ! in_array( 'reminder_prep24h_sent', $columns, true ) ) {
+			$wpdb->query( "ALTER TABLE `" . esc_sql( $table ) . "` ADD COLUMN reminder_prep24h_sent tinyint(1) NOT NULL DEFAULT 0" );
+		}
+
+		if ( ! empty( $columns ) && ! in_array( 'reminder_prep24h_sent_at', $columns, true ) ) {
+			$wpdb->query( "ALTER TABLE `" . esc_sql( $table ) . "` ADD COLUMN reminder_prep24h_sent_at datetime DEFAULT NULL" );
+		}
+
+		if ( ! empty( $columns ) && ! in_array( 'reminder_prep10h_sent', $columns, true ) ) {
+			$wpdb->query( "ALTER TABLE `" . esc_sql( $table ) . "` ADD COLUMN reminder_prep10h_sent tinyint(1) NOT NULL DEFAULT 0" );
+		}
+
+		if ( ! empty( $columns ) && ! in_array( 'reminder_prep10h_sent_at', $columns, true ) ) {
+			$wpdb->query( "ALTER TABLE `" . esc_sql( $table ) . "` ADD COLUMN reminder_prep10h_sent_at datetime DEFAULT NULL" );
 		}
 
 		if ( ! empty( $columns ) && ! in_array( 'survey_sent', $columns, true ) ) {
