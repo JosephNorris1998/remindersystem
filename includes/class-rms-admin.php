@@ -296,14 +296,16 @@ class RMS_Admin {
 						<th>Procedimiento</th>
 						<th>Estado</th>
 						<th>Recordatorio</th>
-					<th>Recordatorio 48h</th>
+						<th>Recordatorio 48h</th>
+						<th>Recordatorio Prep 24h</th>
+						<th>Recordatorio Prep 10h</th>
 						<th style="width:220px;">Acciones</th>
 					</tr>
 				</thead>
 				<tbody>
 				<?php if ( empty( $items ) ) : ?>
 					<tr>
-						<td colspan="9" style="text-align:center;padding:40px;color:#888;">
+						<td colspan="11" style="text-align:center;padding:40px;color:#888;">
 							<?php esc_html_e( 'No hay registros aún.', 'reminder-system' ); ?>
 						</td>
 					</tr>
@@ -334,6 +336,26 @@ class RMS_Admin {
 								<span class="rms-badge rms-badge-sent">✅ Enviado</span>
 								<?php if ( $item->reminder_48h_sent_at ) : ?>
 									<br><small style="color:#888;"><?php echo esc_html( date_i18n( 'd/m/Y H:i', strtotime( $item->reminder_48h_sent_at ) ) ); ?></small>
+								<?php endif; ?>
+							<?php else : ?>
+								<span class="rms-badge rms-badge-pending">⏳ Pendiente</span>
+							<?php endif; ?>
+						</td>
+						<td>
+							<?php if ( $item->reminder_prep24h_sent ) : ?>
+								<span class="rms-badge rms-badge-sent">✅ Enviado</span>
+								<?php if ( $item->reminder_prep24h_sent_at ) : ?>
+									<br><small style="color:#888;"><?php echo esc_html( date_i18n( 'd/m/Y H:i', strtotime( $item->reminder_prep24h_sent_at ) ) ); ?></small>
+								<?php endif; ?>
+							<?php else : ?>
+								<span class="rms-badge rms-badge-pending">⏳ Pendiente</span>
+							<?php endif; ?>
+						</td>
+						<td>
+							<?php if ( $item->reminder_prep10h_sent ) : ?>
+								<span class="rms-badge rms-badge-sent">✅ Enviado</span>
+								<?php if ( $item->reminder_prep10h_sent_at ) : ?>
+									<br><small style="color:#888;"><?php echo esc_html( date_i18n( 'd/m/Y H:i', strtotime( $item->reminder_prep10h_sent_at ) ) ); ?></small>
 								<?php endif; ?>
 							<?php else : ?>
 								<span class="rms-badge rms-badge-pending">⏳ Pendiente</span>

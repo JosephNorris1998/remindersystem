@@ -109,6 +109,50 @@ class RMS_Cron {
 			}
 		}
 
+		// Process the fixed 24-hour preparation reminder.
+		$appointments_prep24h = RMS_DB::get_pending_prep24h_reminders();
+
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( sprintf(
+				'[RMS] Recordatorios de preparación 24h pendientes encontrados: %d',
+				count( $appointments_prep24h )
+			) );
+		}
+
+		foreach ( $appointments_prep24h as $appointment ) {
+			$sent = RMS_Email::send_reminder_prep24h( $appointment );
+			if ( $sent ) {
+				RMS_DB::mark_reminder_prep24h_sent( $appointment->id );
+				if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+					error_log( sprintf( '[RMS] Recordatorio de preparación 24h enviado: cita ID %d (%s).', $appointment->id, $appointment->patient_email ) );
+				}
+			} elseif ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				error_log( sprintf( '[RMS] Fallo al enviar recordatorio de preparación 24h: cita ID %d (%s).', $appointment->id, $appointment->patient_email ) );
+			}
+		}
+
+		// Process the fixed 10-hour preparation reminder.
+		$appointments_prep10h = RMS_DB::get_pending_prep10h_reminders();
+
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( sprintf(
+				'[RMS] Recordatorios de preparación 10h pendientes encontrados: %d',
+				count( $appointments_prep10h )
+			) );
+		}
+
+		foreach ( $appointments_prep10h as $appointment ) {
+			$sent = RMS_Email::send_reminder_prep10h( $appointment );
+			if ( $sent ) {
+				RMS_DB::mark_reminder_prep10h_sent( $appointment->id );
+				if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+					error_log( sprintf( '[RMS] Recordatorio de preparación 10h enviado: cita ID %d (%s).', $appointment->id, $appointment->patient_email ) );
+				}
+			} elseif ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				error_log( sprintf( '[RMS] Fallo al enviar recordatorio de preparación 10h: cita ID %d (%s).', $appointment->id, $appointment->patient_email ) );
+			}
+		}
+
 		// Process post-procedure satisfaction survey emails (retroactive: >= 24 h after appointment).
 		$appointments_survey = RMS_DB::get_pending_survey_emails();
 
