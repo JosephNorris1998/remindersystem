@@ -347,6 +347,8 @@ class RMS_Admin {
 								<?php if ( $item->reminder_prep24h_sent_at ) : ?>
 									<br><small style="color:#888;"><?php echo esc_html( date_i18n( 'd/m/Y H:i', strtotime( $item->reminder_prep24h_sent_at ) ) ); ?></small>
 								<?php endif; ?>
+							<?php elseif ( strtotime( $item->appointment_date ) < current_time( 'timestamp' ) ) : ?>
+								<span class="rms-badge" style="background:#e0e0e0;color:#757575;">— No aplica</span>
 							<?php else : ?>
 								<span class="rms-badge rms-badge-pending">⏳ Pendiente</span>
 							<?php endif; ?>
@@ -357,6 +359,8 @@ class RMS_Admin {
 								<?php if ( $item->reminder_prep10h_sent_at ) : ?>
 									<br><small style="color:#888;"><?php echo esc_html( date_i18n( 'd/m/Y H:i', strtotime( $item->reminder_prep10h_sent_at ) ) ); ?></small>
 								<?php endif; ?>
+							<?php elseif ( strtotime( $item->appointment_date ) < current_time( 'timestamp' ) ) : ?>
+								<span class="rms-badge" style="background:#e0e0e0;color:#757575;">— No aplica</span>
 							<?php else : ?>
 								<span class="rms-badge rms-badge-pending">⏳ Pendiente</span>
 							<?php endif; ?>
