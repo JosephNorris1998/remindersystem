@@ -286,10 +286,11 @@ class RMS_Admin {
 				</div>
 			</form>
 
-			<table class="wp-list-table widefat fixed striped rms-table">
+			<div class="rms-table-wrap">
+			<table class="wp-list-table widefat striped rms-table rms-records-table">
 				<thead>
 					<tr>
-						<th style="width:50px;">ID</th>
+						<th class="rms-col-id">ID</th>
 						<th>Paciente</th>
 						<th>Email</th>
 						<th>Fecha y Hora</th>
@@ -299,7 +300,7 @@ class RMS_Admin {
 						<th>Recordatorio 48h</th>
 						<th>Recordatorio Prep 24h</th>
 						<th>Recordatorio Prep 10h</th>
-						<th style="width:220px;">Acciones</th>
+						<th class="rms-col-actions">Acciones</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -315,7 +316,7 @@ class RMS_Admin {
 						<td><strong><?php echo esc_html( $item->patient_name ); ?></strong></td>
 						<td><?php echo esc_html( $item->patient_email ); ?></td>
 						<td><?php echo esc_html( date_i18n( 'd/m/Y H:i', strtotime( $item->appointment_date ) ) ); ?></td>
-						<td><?php echo esc_html( $item->procedure_name ); ?></td>
+						<td><span class="rms-proc-badge"><?php echo esc_html( $item->procedure_name ); ?></span></td>
 						<td>
 							<span class="rms-badge rms-badge-<?php echo esc_attr( $item->status ); ?>">
 								<?php echo esc_html( ucfirst( $item->status ) ); ?>
@@ -375,6 +376,7 @@ class RMS_Admin {
 				<?php endforeach; endif; ?>
 				</tbody>
 			</table>
+			</div>
 
 			<?php
 			$total_pages = (int) ceil( $total / $per_page );
