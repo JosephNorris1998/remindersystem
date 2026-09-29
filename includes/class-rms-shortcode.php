@@ -63,7 +63,28 @@ class RMS_Shortcode {
 			)
 		);
 
+		/*
+		 * Usage: [reminder_form procedure="Endoscopia"]
+		 * With "procedure" the form is fixed to that procedure (added to the
+		 * list of registered procedures if missing). Without it, the patient
+		 * chooses from all registered procedures.
+		 */
+		$atts       = shortcode_atts( array( 'procedure' => '' ), $atts, 'reminder_form' );
 		$procedures = json_decode( get_option( 'rms_procedures', '["Colonoscopia"]' ), true );
+		if ( ! is_array( $procedures ) || empty( $procedures ) ) {
+			$procedures = array( 'Colonoscopia' );
+		}
+		$fixed = sanitize_text_field( $atts['procedure'] );
+		if ( '' !== $fixed ) {
+			$match = null;
+			foreach ( $procedures as $proc ) {
+				if ( 0 === strcasecmp( $proc, $fixed ) ) {
+					$match = $proc;
+					break;
+				}
+			}
+			$procedures = array( null !== $match ? $match : $fixed );
+		}
 
 		ob_start();
 		?>

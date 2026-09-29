@@ -43,8 +43,41 @@ class RMS_Email {
 		return $dt->getTimestamp();
 	}
 
+	/**
+	 * Procedure-specific wording and guide links used by the email templates.
+	 * Filterable through "rms_procedure_profile" so new procedures can be added.
+	 */
+	public static function get_procedure_profile( $procedure_name ) {
+		$procedure_name = trim( (string) $procedure_name );
+		if ( '' === $procedure_name ) {
+			$procedure_name = 'Colonoscopia';
+		}
+		$key   = sanitize_title( $procedure_name );
+		$lower = function_exists( 'mb_strtolower' ) ? mb_strtolower( $procedure_name, 'UTF-8' ) : strtolower( $procedure_name );
+		$base  = 'https://pacificasalud.beforeaftermycare.com/guia-de-' . $key . '/';
+
+		$profile = array(
+			'key'          => $key,
+			'name'         => $procedure_name,
+			'lower'        => $lower,
+			'guide_name'   => 'Guía de ' . $procedure_name,
+			'guide_url'    => $base,
+			'prep_url'     => $base . '#preparacion',
+			'prep_section' => 'Preparación',
+			'cleanse'      => false,
+		);
+
+		if ( 'colonoscopia' === $key ) {
+			$profile['prep_section'] = 'Limpieza de Colon';
+			$profile['cleanse']      = true;
+		}
+
+		return apply_filters( 'rms_procedure_profile', $profile, $procedure_name );
+	}
+
 	public static function send_confirmation( $appointment ) {
-		$subject = '✅ Confirmación del acceso a su guía de colonoscopia';
+		$pf      = self::get_procedure_profile( $appointment->procedure_name );
+		$subject = '✅ Confirmación del acceso a su guía de ' . $pf['lower'];
 
 		return self::send(
 			$appointment->patient_email,
@@ -87,7 +120,8 @@ class RMS_Email {
 	}
 
 	public static function send_reminder_prep24h( $appointment ) {
-		$subject = '💧 Recordatorio de Preparación: Su colonoscopia es mañana';
+		$pf      = self::get_procedure_profile( $appointment->procedure_name );
+		$subject = '💧 Recordatorio de Preparación: Su ' . $pf['lower'] . ' es mañana';
 
 		return self::send(
 			$appointment->patient_email,
@@ -97,7 +131,8 @@ class RMS_Email {
 	}
 
 	public static function send_reminder_prep10h( $appointment ) {
-		$subject = '💧 Recordatorio: ¿Ya inició su preparación para la colonoscopia?';
+		$pf      = self::get_procedure_profile( $appointment->procedure_name );
+		$subject = '💧 Recordatorio: ¿Ya inició su preparación para la ' . $pf['lower'] . '?';
 
 		return self::send(
 			$appointment->patient_email,
@@ -113,7 +148,8 @@ class RMS_Email {
 	public static function send_survey( $appointment ) {
 		return self::send_survey_to(
 			$appointment->patient_email,
-			$appointment->patient_name
+			$appointment->patient_name,
+			$appointment->procedure_name
 		);
 	}
 
@@ -130,7 +166,7 @@ class RMS_Email {
 	 * Forces the From address to pacificasalud@beforeaftermycare.com regardless
 	 * of the plugin's general "from email" setting.
 	 */
-	private static function send_survey_to( $email, $patient_name = '' ) {
+	private static function send_survey_to( $email, $patient_name = '', $procedure_name = '' ) {
 		$subject = 'Encuesta de Satisfacción – Pacífica Salud';
 
 		$fixed_from_email = 'pacificasalud@beforeaftermycare.com';
@@ -147,7 +183,7 @@ class RMS_Email {
 		add_filter( 'wp_mail_from',      $force_email );
 		add_filter( 'wp_mail_from_name', $force_name );
 
-		$sent = wp_mail( $email, $subject, self::survey_template( $patient_name ), $headers );
+		$sent = wp_mail( $email, $subject, self::survey_template( $patient_name, $procedure_name ), $headers );
 
 		remove_filter( 'wp_mail_from',      $force_email );
 		remove_filter( 'wp_mail_from_name', $force_name );
@@ -238,6 +274,7 @@ class RMS_Email {
 	}
 
 	private static function confirmation_template( $appointment ) {
+		$pf = self::get_procedure_profile( $appointment->procedure_name );
 		$name = esc_html( $appointment->patient_name );
 		$ts   = self::appt_timestamp( $appointment );
 		$tz   = new DateTimeZone( RMS_TIMEZONE );
@@ -246,7 +283,7 @@ class RMS_Email {
 
 		$body = '<p style="font-size:17px;color:#333;margin:0 0 20px;">Hola, <strong>' . $name . '</strong> 👋</p>
 		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 26px;">
-			Le confirmamos que ya tiene acceso a los contenidos de la guía integral de colonoscopia con la siguiente información:
+			Le confirmamos que ya tiene acceso a los contenidos de la guía integral de ' . esc_html( $pf['lower'] ) . ' con la siguiente información:
 		</p>'
 		. $card .
 		'<div style="background:#e8f5e9;border-left:4px solid #4caf50;border-radius:4px;padding:14px 18px;margin-bottom:24px;">
@@ -256,7 +293,7 @@ class RMS_Email {
 		</div>
 		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 16px;">
 			Visita las indicaciones de preparación en tu guía:
-			<a href="https://pacificasalud.beforeaftermycare.com/guia-de-colonoscopia/" style="color:#1a73e8;text-decoration:underline;" target="_blank" rel="noopener noreferrer">Guía de Colonoscopia</a>
+			<a href="' . esc_url( $pf['guide_url'] ) . '" style="color:#1a73e8;text-decoration:underline;" target="_blank" rel="noopener noreferrer">' . esc_html( $pf['guide_name'] ) . '</a>
 		</p>
 		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 12px;">
 			¡Le deseamos mucho éxito en su procedimiento! 🌟
@@ -274,6 +311,7 @@ class RMS_Email {
 	}
 
 	private static function reminder_template( $appointment ) {
+		$pf = self::get_procedure_profile( $appointment->procedure_name );
 		$name  = esc_html( $appointment->patient_name );
 		$hours = (float) get_option( 'rms_reminder_hours', 24 );
 		$ts    = self::appt_timestamp( $appointment );
@@ -301,7 +339,7 @@ class RMS_Email {
 		</div>
 		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 16px;">
 			Visita las indicaciones de preparación en tu guía:
-			<a href="https://pacificasalud.beforeaftermycare.com/guia-de-colonoscopia/" style="color:#1a73e8;text-decoration:underline;" target="_blank" rel="noopener noreferrer">Guía de Colonoscopia</a>
+			<a href="' . esc_url( $pf['guide_url'] ) . '" style="color:#1a73e8;text-decoration:underline;" target="_blank" rel="noopener noreferrer">' . esc_html( $pf['guide_name'] ) . '</a>
 		</p>
 		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 12px;">
 			¡Le deseamos mucho éxito en su procedimiento! 🌟
@@ -319,6 +357,7 @@ class RMS_Email {
 	}
 
 	private static function reminder_48h_template( $appointment ) {
+		$pf = self::get_procedure_profile( $appointment->procedure_name );
 		$name = esc_html( $appointment->patient_name );
 		$ts   = self::appt_timestamp( $appointment );
 		$tz   = new DateTimeZone( RMS_TIMEZONE );
@@ -337,7 +376,7 @@ class RMS_Email {
 		</div>
 		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 16px;">
 			Visita las indicaciones de preparación en tu guía:
-			<a href="https://pacificasalud.beforeaftermycare.com/guia-de-colonoscopia/" style="color:#1a73e8;text-decoration:underline;" target="_blank" rel="noopener noreferrer">Guía de Colonoscopia</a>
+			<a href="' . esc_url( $pf['guide_url'] ) . '" style="color:#1a73e8;text-decoration:underline;" target="_blank" rel="noopener noreferrer">' . esc_html( $pf['guide_name'] ) . '</a>
 		</p>
 		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 12px;">
 			¡Le deseamos mucho éxito en su procedimiento! 🌟
@@ -355,6 +394,7 @@ class RMS_Email {
 	}
 
 	private static function reminder_2h_template( $appointment ) {
+		$pf = self::get_procedure_profile( $appointment->procedure_name );
 		$name = esc_html( $appointment->patient_name );
 		$ts   = self::appt_timestamp( $appointment );
 		$tz   = new DateTimeZone( RMS_TIMEZONE );
@@ -374,7 +414,7 @@ class RMS_Email {
 		<div style="background:#e3f2fd;border-left:4px solid #1a73e8;border-radius:4px;padding:14px 18px;margin-bottom:24px;">
 			<p style="margin:0;color:#0d47a1;font-size:13px;line-height:1.7;">
 				<strong>📋 Antes de salir:</strong> Le sugerimos revisar las indicaciones de admisión para asegurarse de llegar preparado. Consulte su guía:
-				<a href="https://pacificasalud.beforeaftermycare.com/guia-de-colonoscopia/" style="color:#1a73e8;text-decoration:underline;" target="_blank" rel="noopener noreferrer">Guía de Colonoscopia</a>
+				<a href="' . esc_url( $pf['guide_url'] ) . '" style="color:#1a73e8;text-decoration:underline;" target="_blank" rel="noopener noreferrer">' . esc_html( $pf['guide_name'] ) . '</a>
 			</p>
 		</div>
 		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 12px;">
@@ -393,16 +433,17 @@ class RMS_Email {
 	}
 
 	private static function reminder_prep24h_template( $appointment ) {
+		$pf = self::get_procedure_profile( $appointment->procedure_name );
 		$name = esc_html( $appointment->patient_name );
 		$card = self::details_card( $appointment, '#f8faff', '#e3eaf5', '#e8eef6' );
 
-		$body = '<p style="font-size:17px;color:#333;margin:0 0 20px;">Hola, <strong>' . $name . '</strong> 👋</p>
-		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 20px;">
-			Su procedimiento de <strong>colonoscopia se acerca</strong> y queremos recordarle que continúe siguiendo cuidadosamente las indicaciones de preparación proporcionadas por su médico.
-		</p>
-		<h3 style="color:#1a1a2e;font-size:18px;margin:0 0 14px;">💧 ¿Cómo va su limpieza de colon?</h3>
+		$lower = esc_html( $pf['lower'] );
+		$sect  = esc_html( $pf['prep_section'] );
+
+		if ( $pf['cleanse'] ) {
+			$check = '<h3 style="color:#1a1a2e;font-size:18px;margin:0 0 14px;">💧 ¿Cómo va su limpieza de colon?</h3>
 		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 14px;">
-			Ingrese a su Guía de Colonoscopia y vaya a la sección "Limpieza de Colon → Fase 3: Verificación de Limpieza".
+			Ingrese a su ' . esc_html( $pf['guide_name'] ) . ' y vaya a la sección "Limpieza de Colon → Fase 3: Verificación de Limpieza".
 		</p>
 		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 14px;">
 			Compare el resultado con la imagen de referencia que aparece en la guía.
@@ -415,12 +456,27 @@ class RMS_Email {
 		</p>
 		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 20px;">
 			Esto nos permite conocer cómo avanza su preparación antes del procedimiento.
+		</p>';
+		} else {
+			$check = '<h3 style="color:#1a1a2e;font-size:18px;margin:0 0 14px;">💧 ¿Ya revisó su preparación?</h3>
+		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 14px;">
+			Ingrese a su ' . esc_html( $pf['guide_name'] ) . ' y revise la sección "' . $sect . '" para confirmar las indicaciones de ayuno y cuidados previos a su procedimiento.
+		</p>
+		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 20px;">
+			Esto nos permite conocer cómo avanza su preparación antes del procedimiento.
+		</p>';
+		}
+
+		$body = '<p style="font-size:17px;color:#333;margin:0 0 20px;">Hola, <strong>' . $name . '</strong> 👋</p>
+		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 20px;">
+			Su procedimiento de <strong>' . $lower . ' se acerca</strong> y queremos recordarle que continúe siguiendo cuidadosamente las indicaciones de preparación proporcionadas por su médico.
 		</p>'
+		. $check
 		. $card .
 		'<table cellpadding="0" cellspacing="0" style="margin:0 auto 24px;">
 			<tr>
 				<td style="background:#0288d1;border-radius:8px;text-align:center;">
-					<a href="https://pacificasalud.beforeaftermycare.com/guia-de-colonoscopia/#preparacion"
+					<a href="' . esc_url( $pf['prep_url'] ) . '"
 					   style="display:inline-block;padding:16px 28px;color:#fff;font-size:15px;font-weight:700;letter-spacing:.3px;text-decoration:none;"
 					   target="_blank" rel="noopener noreferrer">
 						VERIFICAR MI PREPARACIÓN
@@ -438,30 +494,31 @@ class RMS_Email {
 		return self::base_layout(
 			'linear-gradient(135deg,#1976d2 0%,#0288d1 100%)',
 			'💧 Recordatorio de Preparación',
-			'Su colonoscopia es mañana',
+			'Su ' . $pf['lower'] . ' es mañana',
 			$body
 		);
 	}
 
 	private static function reminder_prep10h_template( $appointment ) {
+		$pf = self::get_procedure_profile( $appointment->procedure_name );
 		$name = esc_html( $appointment->patient_name );
 		$card = self::details_card( $appointment, '#effaf8', '#cfeee8', '#dff3ee' );
 
 		$body = '<p style="font-size:17px;color:#333;margin:0 0 20px;">Hola, <strong>' . $name . '</strong> 👋</p>
 		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 14px;">
-			¿Ya inició su preparación para la colonoscopia?
+			¿Ya inició su preparación para la ' . esc_html( $pf['lower'] ) . '?
 		</p>
 		<p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 20px;">
-			Si ya comenzó siguiendo las indicaciones proporcionadas por su médico, ingrese a Limpieza de Colon y confírmenos que inició su preparación.
+			Si ya comenzó siguiendo las indicaciones proporcionadas por su médico, ingrese a ' . esc_html( $pf['prep_section'] ) . ' y confírmenos que inició su preparación.
 		</p>'
 		. $card .
 		'<table cellpadding="0" cellspacing="0" style="margin:0 auto 24px;">
 			<tr>
 				<td style="background:#00897b;border-radius:8px;text-align:center;">
-					<a href="https://pacificasalud.beforeaftermycare.com/guia-de-colonoscopia/#preparacion"
+					<a href="' . esc_url( $pf['prep_url'] ) . '"
 					   style="display:inline-block;padding:16px 28px;color:#fff;font-size:15px;font-weight:700;letter-spacing:.3px;text-decoration:none;"
 					   target="_blank" rel="noopener noreferrer">
-						IR A LIMPIEZA DE COLON
+						IR A ' . esc_html( function_exists( 'mb_strtoupper' ) ? mb_strtoupper( $pf['prep_section'], 'UTF-8' ) : strtoupper( $pf['prep_section'] ) ) . '
 					</a>
 				</td>
 			</tr>
@@ -476,7 +533,7 @@ class RMS_Email {
 		return self::base_layout(
 			'linear-gradient(135deg,#00897b 0%,#00695c 100%)',
 			'💧 Recordatorio de Preparación',
-			'¿Ya inició su preparación para la colonoscopia?',
+			'¿Ya inició su preparación para la ' . $pf['lower'] . '?',
 			$body
 		);
 	}
@@ -486,7 +543,8 @@ class RMS_Email {
 	 *
 	 * @param string $patient_name The patient's full name, or empty for a generic greeting.
 	 */
-	private static function survey_template( $patient_name = '' ) {
+	private static function survey_template( $patient_name = '', $procedure_name = '' ) {
+		$procedure_label = self::get_procedure_profile( $procedure_name )['name'];
 		$greeting = ! empty( $patient_name )
 			? 'Estimado <strong>' . esc_html( $patient_name ) . '</strong>'
 			: 'Estimado <strong>Paciente</strong>';
@@ -533,7 +591,7 @@ class RMS_Email {
                         <td style="padding:24px 26px;">
                             <h3 style="color:#1a1a2e;font-size:17px;margin:0 0 14px;">¡Su opinión nos ayuda a mejorar!</h3>
 
-                            <p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 20px;">Para nosotros es muy importante conocer su experiencia. Sabemos que recientemente completó su procedimiento de Colonoscopia en Pacífica Salud. Le invitamos a dedicar unos minutos para completar nuestra breve encuesta de satisfacción.</p>
+                            <p style="color:#555;font-size:14px;line-height:1.8;margin:0 0 20px;">Para nosotros es muy importante conocer su experiencia. Sabemos que recientemente completó su procedimiento de ' . esc_html( $procedure_label ) . ' en Pacífica Salud. Le invitamos a dedicar unos minutos para completar nuestra breve encuesta de satisfacción.</p>
 
                             <table cellpadding="0" cellspacing="0">
                                 <tr>

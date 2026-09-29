@@ -95,3 +95,12 @@ Cuando `WP_DEBUG` está activo en `wp-config.php`, el plugin escribe en el log d
 [RMS] Recordatorios 48h pendientes encontrados: 1
 [RMS] Recordatorio 48h enviado: cita ID 3 (otro@email.com).
 ```
+
+## Shortcode por procedimiento
+
+`[reminder_form]` muestra todos los procedimientos registrados.
+`[reminder_form procedure="Endoscopia"]` fija el formulario a ese procedimiento
+(por ejemplo, en la página de la guía de endoscopia). Los correos (asunto, cuerpo
+y enlaces a `/guia-de-{procedimiento}/`) se adaptan automáticamente al
+procedimiento del paciente. Para personalizar textos de un procedimiento nuevo use
+el filtro `rms_procedure_profile`.

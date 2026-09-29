@@ -123,3 +123,57 @@
 	font-weight: 600;
 	color: #444;
 }
+
+/* ---- Patient records table ---- */
+.rms-table-wrap {
+	background: #fff;
+	border: 1px solid #dcdfe4;
+	border-radius: 10px;
+	box-shadow: 0 1px 3px rgba(16, 24, 40, 0.06);
+	overflow-x: auto;
+}
+
+.rms-records-table {
+	border: 0;
+	box-shadow: none;
+	border-collapse: collapse;
+	width: 100%;
+	min-width: 1100px;
+}
+
+.rms-records-table thead th {
+	background: #1e3a5f;
+	color: #fff;
+	font-size: 12px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.4px;
+	padding: 12px 14px;
+	white-space: nowrap;
+	border-bottom: 0;
+}
+
+.rms-records-table tbody td {
+	padding: 12px 14px;
+	vertical-align: middle;
+	border-bottom: 1px solid #eef0f3;
+	word-break: break-word;
+}
+
+.rms-records-table tbody tr:hover td {
+	background: #f3f7fc;
+}
+
+.rms-records-table .rms-col-id      { width: 50px; }
+.rms-records-table .rms-col-actions { min-width: 230px; }
+
+.rms-proc-badge {
+	display: inline-block;
+	padding: 3px 10px;
+	border-radius: 6px;
+	background: #e8f0fe;
+	color: #1a4fa3;
+	font-size: 12px;
+	font-weight: 600;
+	white-space: nowrap;
+}
